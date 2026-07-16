@@ -1,0 +1,14 @@
+{
+  "name": "openrun",
+  "version": "1.0.0",
+  "description": "OpenRun - Fast local execution and LeetCode testing environment",
+  "scripts": {
+    "install:frontend": "cd frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "dev": "cd frontend && npm run dev",
+    "start": "python main.py",
+    "setup": "npm run install:frontend && npm run build"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
