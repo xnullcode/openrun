@@ -39,9 +39,10 @@ function App() {
     return saved ? JSON.parse(saved) : [{ input: '', expectedOutput: '' }];
   });
   const [results, setResults] = useState<TestResult[]>([]);
-  const [activeTab, setActiveTab] = useState<'tests' | 'results'>('tests');
+  const [activeTab, setActiveTab] = useState<'description' | 'tests' | 'results'>('description');
   const [activeCaseIndex, setActiveCaseIndex] = useState(0);
   const [scrapeUrl, setScrapeUrl] = useState('');
+  const [problemDescription, setProblemDescription] = useState(() => localStorage.getItem('openrun_desc') || '');
   const [isLoading, setIsLoading] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
   
@@ -58,6 +59,8 @@ function App() {
       setActiveTab('tests');
       setActiveCaseIndex(0);
       setScrapeUrl('');
+      setProblemDescription('');
+      localStorage.removeItem('openrun_desc');
       setLayoutOrientation("horizontal");
     }
   };
@@ -69,6 +72,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem('openrun_testcases', JSON.stringify(testCases));
   }, [testCases]);
+
+  useEffect(() => {
+    localStorage.setItem('openrun_desc', problemDescription);
+  }, [problemDescription]);
 
   const handleRun = async () => {
     setIsLoading(true);
@@ -105,8 +112,11 @@ function App() {
         if (res.data.starting_code) {
           setCode(res.data.starting_code);
         }
+        if (res.data.description_html) {
+          setProblemDescription(res.data.description_html);
+        }
         setActiveCaseIndex(0);
-        setActiveTab('tests');
+        setActiveTab('description');
       } else {
         alert("No test cases found or scraping failed.");
       }
@@ -282,6 +292,12 @@ function App() {
             {/* Tabs Header */}
             <div className="h-10 bg-surface border-b border-border flex shrink-0">
               <button 
+                className={`flex-1 text-sm font-medium transition-colors ${activeTab === 'description' ? 'text-primary border-b-2 border-primary' : 'text-textMuted hover:text-white'}`}
+                onClick={() => setActiveTab('description')}
+              >
+                Description
+              </button>
+              <button 
                 className={`flex-1 text-sm font-medium transition-colors ${activeTab === 'tests' ? 'text-primary border-b-2 border-primary' : 'text-textMuted hover:text-white'}`}
                 onClick={() => setActiveTab('tests')}
               >
@@ -297,6 +313,18 @@ function App() {
 
             {/* Pane Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
+              {activeTab === 'description' && (
+                <div className="flex-1 p-4 overflow-y-auto custom-scrollbar problem-description text-sm text-gray-300">
+                  {problemDescription ? (
+                    <div dangerouslySetInnerHTML={{ __html: problemDescription }} />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-textMuted">
+                      <p>Scrape a problem to see its description here.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {activeTab === 'tests' && (
                 <div className="flex-1 flex flex-col p-4 overflow-hidden">
                   {/* Test Case Tab Navigation */}

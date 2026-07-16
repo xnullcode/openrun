@@ -19,3 +19,12 @@
     @apply bg-secondary border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary transition-colors text-white;
   }
 }
+
+  .problem-description p { @apply mb-4 leading-relaxed; }
+  .problem-description ul, .problem-description ol { @apply list-disc list-outside mb-4 ml-5; }
+  .problem-description pre { @apply bg-secondary p-4 rounded-xl border border-border overflow-x-auto mb-4 font-mono text-[13px] text-gray-300 shadow-inner; }
+  .problem-description code { @apply bg-secondary px-1.5 py-0.5 rounded-md text-xs font-mono text-gray-200 border border-border; }
+  .problem-description pre code { @apply bg-transparent p-0 border-none text-[13px]; }
+  .problem-description strong { @apply text-white font-semibold; }
+  .problem-description h1, .problem-description h2, .problem-description h3 { @apply text-white font-bold mt-6 mb-3; }
+  .problem-description img { @apply max-w-full rounded-lg my-4; }
