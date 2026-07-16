@@ -4,21 +4,108 @@ import tempfile
 import uuid
 import time
 import shutil
+import re
 from typing import List, Dict, Any
+
+def inject_harness(code: str) -> tuple[str, str]:
+    if "public static void main" in code:
+        return code, "Solution"
+
+    match = re.search(r"public\s+([A-Za-z0-9_\[\]<>]+)\s+([A-Za-z0-9_]+)\s*\((.*?)\)", code)
+    if not match:
+        return code, "Solution"
+        
+    return_type, method_name, params_str = match.groups()
+    params = [p.strip() for p in params_str.split(",") if p.strip()]
+    
+    clean_user_code = re.sub(r"public\s+class\s+Solution", "class Solution", code)
+    
+    parse_blocks = []
+    args = []
+    
+    for i, p in enumerate(params):
+        parts = p.split()
+        if len(parts) >= 2:
+            p_type = parts[0]
+            p_name = parts[-1]
+        else:
+            continue
+            
+        args.append(p_name)
+        
+        if p_type == "int[]":
+            parse_blocks.append(f"""
+        if (!sc.hasNextLine()) return;
+        String raw_{p_name} = sc.nextLine().trim();
+        String cleaned_{p_name} = raw_{p_name}.replaceAll("[\\\\[\\\\]\\\\s]", "");
+        int[] {p_name};
+        if (cleaned_{p_name}.isEmpty()) {{
+            {p_name} = new int[0];
+        }} else {{
+            String[] tokens_{p_name} = cleaned_{p_name}.split(",");
+            {p_name} = new int[tokens_{p_name}.length];
+            for (int j = 0; j < tokens_{p_name}.length; j++) {{
+                {p_name}[j] = Integer.parseInt(tokens_{p_name}[j].trim());
+            }}
+        }}""")
+        elif p_type == "int":
+            parse_blocks.append(f"""
+        if (!sc.hasNextLine()) return;
+        int {p_name} = Integer.parseInt(sc.nextLine().trim());
+        """)
+        elif p_type == "String":
+            parse_blocks.append(f"""
+        if (!sc.hasNextLine()) return;
+        String {p_name} = sc.nextLine().trim();
+        """)
+        else:
+            parse_blocks.append(f"""
+        if (!sc.hasNextLine()) return;
+        String {p_name} = sc.nextLine().trim();
+        """)
+
+    parse_logic = "\n".join(parse_blocks)
+    args_list = ", ".join(args)
+    
+    if return_type == "void":
+        invoke_logic = f"solver.{method_name}({args_list});\n        System.out.println(\"null\");"
+    elif "[]" in return_type:
+        invoke_logic = f"{return_type} result = solver.{method_name}({args_list});\n        System.out.println(Arrays.toString(result));"
+    else:
+        invoke_logic = f"{return_type} result = solver.{method_name}({args_list});\n        System.out.println(result);"
+
+    harness = f"""import java.util.*;
+import java.io.*;
+
+public class Main {{
+    public static void main(String[] args) {{
+        Scanner sc = new Scanner(System.in);
+        {parse_logic}
+        
+        Solution solver = new Solution();
+        {invoke_logic}
+    }}
+}}
+
+{clean_user_code}
+"""
+    return harness, "Main"
 
 async def execute_java_code(code: str, test_cases: List[Dict[str, str]]) -> Dict[str, Any]:
     run_id = str(uuid.uuid4())
     temp_dir = os.path.join(tempfile.gettempdir(), f"openrun_{run_id}")
     os.makedirs(temp_dir, exist_ok=True)
 
-    main_file_path = os.path.join(temp_dir, "Solution.java")
+    final_code, main_class = inject_harness(code)
+    
+    main_file_path = os.path.join(temp_dir, f"{main_class}.java")
     with open(main_file_path, "w") as f:
-        f.write(code)
+        f.write(final_code)
     
     try:
         # Compile
         compile_process = await asyncio.create_subprocess_exec(
-            "javac", "Solution.java",
+            "javac", f"{main_class}.java",
             cwd=temp_dir,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
@@ -41,7 +128,7 @@ async def execute_java_code(code: str, test_cases: List[Dict[str, str]]) -> Dict
             
             start_time = time.time()
             exec_process = await asyncio.create_subprocess_exec(
-                "java", "Solution",
+                "java", main_class,
                 cwd=temp_dir,
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
