@@ -1,60 +1,133 @@
 import asyncio
-from playwright.async_api import async_playwright
-from playwright_stealth import Stealth
+import json
+import urllib.request
+import re
 from typing import Dict, Any
 
+def fetch_leetcode_graphql(title_slug: str) -> Dict[str, Any]:
+    req = urllib.request.Request(
+        'https://leetcode.com/graphql',
+        method='POST',
+        headers={
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        },
+        data=json.dumps({
+            "query": "query{question(titleSlug:\"" + title_slug + "\"){title content exampleTestcases codeSnippets{langSlug code}}}"
+        }).encode('utf-8')
+    )
+    with urllib.request.urlopen(req, timeout=10) as response:
+        return json.loads(response.read())
+
+def fetch_tuf_api(title_slug: str) -> Dict[str, Any]:
+    req = urllib.request.Request(
+        f'https://backend-go.takeuforward.org/api/v2/plus/problem/{title_slug}?subjectSlug=dsa',
+        method='GET',
+        headers={
+            'Origin': 'https://takeuforward.org',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        }
+    )
+    with urllib.request.urlopen(req, timeout=10) as response:
+        return json.loads(response.read())
+
 async def scrape_problem(url: str) -> Dict[str, Any]:
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context()
-        page = await context.new_page()
+    try:
+        is_tuf = "takeuforward.org" in url
+        title_slug = url.strip('/').split('?')[0].split('/')[-1]
         
-        await Stealth().apply_stealth_async(page)
-        
-        try:
-            await page.goto(url, wait_until="networkidle", timeout=15000)
-            
-            title = await page.title()
-            
-            # Try some common leetcode classes or fallback to general description
-            description_elem = await page.query_selector('.elfjS')
-            if not description_elem:
-                description_elem = await page.query_selector('[data-track-load="description_content"]')
+        title = ""
+        description_html = ""
+        description_text = ""
+        test_cases = []
+        starting_code = ""
+
+        if is_tuf:
+            data = await asyncio.to_thread(fetch_tuf_api, title_slug)
+            prob_data = data.get('data', {})
+            if not prob_data:
+                raise ValueError("TUF problem data not found.")
                 
-            if description_elem:
-                description_html = await description_elem.inner_html()
-                description_text = await description_elem.inner_text()
-            else:
-                description_html = "<i>Description parsing heuristic failed for this URL.</i>"
-                description_text = "Description parsing heuristic failed for this URL."
-
-            # Find test cases - typically inside <pre> tags
-            pre_tags = await page.query_selector_all('pre')
-            test_cases = []
+            title = prob_data.get('problem_name', 'Unknown Title')
+            content = prob_data.get('problem_statement', '')
+            description_html = content
+            description_text = re.sub(r'<[^>]+>', '', content)
             
-            for pre in pre_tags:
-                text = await pre.inner_text()
-                if "Input:" in text and "Output:" in text:
-                    parts = text.split("Output:")
-                    if len(parts) >= 2:
-                        input_part = parts[0].replace("Input:", "").strip()
-                        output_part = parts[1].split("Explanation:")[0].strip()
-                        test_cases.append({
-                            "input": input_part,
-                            "expectedOutput": output_part
-                        })
-
-            return {
-                "success": True,
-                "title": title,
-                "description_html": description_html,
-                "description_text": description_text,
-                "test_cases": test_cases
-            }
-        except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
-        finally:
-            await browser.close()
+            starting_code = prob_data.get('publicJava', '')
+            
+            outputs = []
+            for i in range(1, 10):
+                ex_key = f'example{i}'
+                if ex_key in prob_data and prob_data[ex_key]:
+                    match = re.search(r'Output:<\/strong>\s*(.*?)(<|\n|$)', prob_data[ex_key])
+                    if match:
+                        out_val = match.group(1).strip()
+                        out_val = re.sub(r'<[^>]+>', '', out_val).strip()
+                        outputs.append(out_val)
+                    else:
+                        outputs.append("")
+                        
+            tc_data = prob_data.get('testcases', [])
+            for i, tc in enumerate(tc_data):
+                if i >= len(outputs):
+                    outputs.append("")
+                
+                inputs_dict = tc.get('inputs', {})
+                tc_input = '\n'.join(str(v).replace(" ", "") for v in inputs_dict.values())
+                
+                test_cases.append({
+                    "input": tc_input,
+                    "expectedOutput": outputs[i]
+                })
+                
+        else: # Leetcode
+            data = await asyncio.to_thread(fetch_leetcode_graphql, title_slug)
+            question = data.get('data', {}).get('question')
+            if not question:
+                raise ValueError("Question data not found.")
+                
+            title = question.get('title', 'Unknown Title')
+            content = question.get('content', '')
+            description_html = content
+            description_text = re.sub(r'<[^>]+>', '', content)
+            
+            snippets = question.get('codeSnippets', [])
+            for snip in (snippets or []):
+                if snip.get('langSlug') == 'java':
+                    starting_code = snip.get('code', '')
+                    break
+            
+            outputs = []
+            for match in re.finditer(r'Output:<\/strong>\s*(.*?)(<|\n)', content):
+                outputs.append(match.group(1).strip())
+                
+            raw_testcases = question.get('exampleTestcases', '')
+            lines = raw_testcases.strip().split('\n')
+            
+            if outputs and lines and len(outputs) > 0:
+                lines_per_tc = len(lines) // len(outputs)
+                for i in range(len(outputs)):
+                    tc_input = '\n'.join(lines[i*lines_per_tc : (i+1)*lines_per_tc])
+                    test_cases.append({
+                        "input": tc_input,
+                        "expectedOutput": outputs[i]
+                    })
+            else:
+                test_cases.append({"input": "", "expectedOutput": ""})
+                    
+        return {
+            "success": True,
+            "title": title,
+            "description_html": description_html,
+            "description_text": description_text,
+            "test_cases": test_cases,
+            "starting_code": starting_code
+        }
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {
+            "success": False,
+            "error": str(e)
+        }
