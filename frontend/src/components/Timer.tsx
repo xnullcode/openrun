@@ -10,8 +10,32 @@ export default function Timer() {
   const [mode, setMode] = useState<'stopwatch' | 'timer'>('stopwatch');
   const [timerHours, setTimerHours] = useState('00');
   const [timerMinutes, setTimerMinutes] = useState('00');
+  const [initialTimerDuration, setInitialTimerDuration] = useState(0);
   
   const popoverRef = useRef<HTMLDivElement>(null);
+
+  const playBeep = () => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const beep = (time: number, freq: number, dur: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.1, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+        osc.start(time);
+        osc.stop(time + dur);
+      };
+      // Play a triple beep pattern
+      beep(ctx.currentTime, 880, 0.15);
+      beep(ctx.currentTime + 0.25, 880, 0.15);
+      beep(ctx.currentTime + 0.5, 880, 0.15);
+    } catch (e) {
+      console.error("Audio playback failed", e);
+    }
+  };
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -23,6 +47,7 @@ export default function Timer() {
           setTimeRemaining(prev => {
             if (prev <= 1) {
               setIsPaused(true);
+              playBeep();
               return 0;
             }
             return prev - 1;
@@ -43,6 +68,17 @@ export default function Timer() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isActive && !isPaused) {
+        e.preventDefault();
+        e.returnValue = "You have an active timer running. Are you sure you want to leave?";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isActive, isPaused]);
+
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -58,7 +94,9 @@ export default function Timer() {
       const h = parseInt(timerHours) || 0;
       const m = parseInt(timerMinutes) || 0;
       if (h === 0 && m === 0) return;
-      setTimeRemaining(h * 3600 + m * 60);
+      const duration = h * 3600 + m * 60;
+      setTimeRemaining(duration);
+      setInitialTimerDuration(duration);
     } else {
       setTimeElapsed(0);
     }
@@ -77,7 +115,9 @@ export default function Timer() {
     } else {
       const h = parseInt(timerHours) || 0;
       const m = parseInt(timerMinutes) || 0;
-      setTimeRemaining(h * 3600 + m * 60);
+      const duration = h * 3600 + m * 60;
+      setTimeRemaining(duration);
+      setInitialTimerDuration(duration);
     }
     setIsPaused(true);
   };
@@ -87,6 +127,7 @@ export default function Timer() {
     setIsPaused(false);
     setTimeElapsed(0);
     setTimeRemaining(0);
+    setInitialTimerDuration(0);
     setShowPopover(false);
   };
 
@@ -105,28 +146,37 @@ export default function Timer() {
 
   const isTimer = mode === 'timer';
   const displayTime = isTimer ? timeRemaining : timeElapsed;
-  const textColor = isTimer ? 'text-orange-500' : 'text-blue-400';
+  
+  const isWarning = isTimer && initialTimerDuration > 0 && timeRemaining <= initialTimerDuration * 0.1;
+  const bgColor = isWarning ? 'bg-red-600 border-red-500' : 'bg-[#2b2b2b] border-border';
+  const textColor = isWarning ? 'text-white' : (isTimer ? 'text-orange-500' : 'text-blue-400');
 
   return (
     <div className="relative" ref={popoverRef}>
       {isActive ? (
-        <div className="flex items-center gap-1.5 bg-[#2b2b2b] px-2 py-1.5 rounded-lg text-sm text-textMuted transition-colors border border-border h-9 shadow-sm">
-          <button onClick={handleClose} className="hover:text-white transition-colors" title="Close Timer">
-            <ChevronLeft size={16} />
-          </button>
-          <button onClick={handlePauseToggle} className="hover:text-white transition-colors" title={isPaused ? "Play" : "Pause"}>
-            {isPaused ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
-          </button>
+        <div className={`group flex items-center ${bgColor} px-2 py-1.5 rounded-lg text-sm ${isWarning ? 'text-white/80' : 'text-textMuted'} transition-all border h-9 shadow-sm cursor-default`}>
+          <div className="flex items-center overflow-hidden transition-all duration-300 ease-in-out w-0 opacity-0 group-hover:w-[44px] group-hover:opacity-100">
+            <button onClick={handleClose} className="hover:text-white transition-colors flex-shrink-0 w-[22px] flex items-center justify-center" title="Close Timer">
+              <ChevronLeft size={16} />
+            </button>
+            <button onClick={handlePauseToggle} className="hover:text-white transition-colors flex-shrink-0 w-[22px] flex items-center justify-center" title={isPaused ? "Play" : "Pause"}>
+              {isPaused ? <Play size={14} fill="currentColor" /> : <Pause size={14} fill="currentColor" />}
+            </button>
+          </div>
+          
           <button 
             onClick={() => setShowPopover(!showPopover)} 
-            className={`tabular-nums text-[13px] ${textColor} font-medium min-w-[40px] text-center select-none hover:opacity-80 transition-opacity mx-0.5`}
+            className={`tabular-nums text-sm ${textColor} font-semibold min-w-[42px] text-center select-none hover:opacity-80 transition-opacity mx-1`}
             title="Open Timer Settings"
           >
             {formatTime(displayTime)}
           </button>
-          <button onClick={handleReset} className="hover:text-white transition-colors" title="Reset">
-            <RotateCcw size={14} />
-          </button>
+
+          <div className="flex items-center overflow-hidden transition-all duration-300 ease-in-out w-0 opacity-0 group-hover:w-[22px] group-hover:opacity-100">
+            <button onClick={handleReset} className="hover:text-white transition-colors flex-shrink-0 w-[22px] flex items-center justify-center" title="Reset">
+              <RotateCcw size={14} />
+            </button>
+          </div>
         </div>
       ) : (
         <button 
