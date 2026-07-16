@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
-import { Play, Download, Plus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows } from 'lucide-react';
+import { Play, Download, Plus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows, RotateCcw } from 'lucide-react';
 import axios from 'axios';
 import { Group, Panel, Separator } from 'react-resizable-panels';
+import Timer from './components/Timer';
 
 interface TestCase {
   input: string;
@@ -47,6 +48,20 @@ function App() {
   // Layout state
   const [layoutOrientation, setLayoutOrientation] = useState<"horizontal" | "vertical">("horizontal");
 
+  const handleReset = () => {
+    if (window.confirm("Are you sure you want to reset all code, test cases, and settings? This cannot be undone.")) {
+      localStorage.removeItem('openrun_code');
+      localStorage.removeItem('openrun_testcases');
+      setCode(DEFAULT_JAVA_CODE);
+      setTestCases([{ input: '', expectedOutput: '' }]);
+      setResults([]);
+      setActiveTab('tests');
+      setActiveCaseIndex(0);
+      setScrapeUrl('');
+      setLayoutOrientation("horizontal");
+    }
+  };
+
   useEffect(() => {
     localStorage.setItem('openrun_code', code);
   }, [code]);
@@ -87,6 +102,9 @@ function App() {
       const res = await axios.post('/api/scrape', { url: scrapeUrl });
       if (res.data.success && res.data.test_cases && res.data.test_cases.length > 0) {
         setTestCases(res.data.test_cases);
+        if (res.data.starting_code) {
+          setCode(res.data.starting_code);
+        }
         setActiveCaseIndex(0);
         setActiveTab('tests');
       } else {
@@ -135,26 +153,33 @@ function App() {
   const safeResultIndex = activeCaseIndex < results.length ? activeCaseIndex : 0;
   const currentResult = results[safeResultIndex];
   const allPassed = results.every(r => r.passed);
+  const hasExpectedOutput = results.some(r => r.expectedOutput && r.expectedOutput.trim() !== "");
   const totalRuntime = results.reduce((acc, curr) => acc + curr.executionTimeMs, 0);
-  const globalStatus = results.length > 0 ? (results[0].testCaseIndex === -1 ? "Error" : (allPassed ? "Accepted" : "Wrong Answer")) : "";
+  const globalStatus = results.length > 0 
+    ? (results[0].testCaseIndex === -1 
+        ? "Error" 
+        : (allPassed 
+            ? (hasExpectedOutput ? "Accepted" : "Output Generated") 
+            : "Wrong Answer")) 
+    : "";
 
   return (
     <div className="h-screen w-screen flex flex-col bg-background text-textMain overflow-hidden font-sans">
       {/* Header */}
-      <header className="h-16 border-b border-border bg-surface px-6 flex items-center justify-between shadow-md z-10 shrink-0">
+      <header className="h-14 border-b border-border bg-surface px-6 flex items-center justify-between shadow-md z-10 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="bg-primary p-2 rounded-lg text-white">
-            <Cpu size={20} />
+          <div className="bg-primary p-1.5 rounded-lg text-white">
+            <Cpu size={18} />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-white">OpenRun</h1>
+          <h1 className="text-lg font-bold tracking-tight text-white hidden sm:block">OpenRun</h1>
         </div>
 
-        <div className="flex items-center gap-4 flex-1 max-w-2xl ml-8">
-          <div className="flex-1 flex gap-2">
+        <div className="flex items-center flex-1 max-w-lg mx-6">
+          <div className="flex-1 flex gap-1 bg-secondary/50 border border-border p-1 rounded-lg">
             <input 
               type="text" 
-              placeholder="Paste LeetCode/Problem URL to scrape..." 
-              className="input-field flex-1"
+              placeholder="Paste LeetCode/TUF URL..." 
+              className="bg-transparent border-none text-white focus:ring-0 text-sm flex-1 px-3 py-1 outline-none min-w-[150px]"
               value={scrapeUrl}
               onChange={e => setScrapeUrl(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleScrape()}
@@ -162,39 +187,57 @@ function App() {
             <button 
               onClick={handleScrape}
               disabled={isScraping || !scrapeUrl}
-              className="btn-primary bg-secondary hover:bg-gray-700 text-white"
+              className="bg-primary hover:bg-primary/90 text-white rounded-md px-3 py-1.5 flex items-center justify-center transition-colors disabled:opacity-50 min-w-[32px]"
+              title="Scrape Problem"
             >
-              <Download size={16} />
-              {isScraping ? 'Scraping...' : 'Scrape'}
+              {isScraping ? (
+                 <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                 <Download size={14} />
+              )}
             </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1 bg-secondary p-1 rounded-lg">
+        <div className="flex items-center gap-1.5">
+          <Timer />
+
+          <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-lg ml-2">
             <button
               onClick={() => setLayoutOrientation("horizontal")}
-              className={`p-1.5 rounded-md transition-colors ${layoutOrientation === "horizontal" ? "bg-primary text-white" : "text-textMuted hover:text-white"}`}
+              className={`p-1.5 rounded-md transition-colors ${layoutOrientation === "horizontal" ? "bg-blue-500 text-white shadow-sm" : "text-slate-400 hover:text-white"}`}
               title="Side by Side"
             >
-              <Columns size={16} />
+              <Columns size={14} />
             </button>
             <button
               onClick={() => setLayoutOrientation("vertical")}
-              className={`p-1.5 rounded-md transition-colors ${layoutOrientation === "vertical" ? "bg-primary text-white" : "text-textMuted hover:text-white"}`}
+              className={`p-1.5 rounded-md transition-colors ${layoutOrientation === "vertical" ? "bg-blue-500 text-white shadow-sm" : "text-slate-400 hover:text-white"}`}
               title="Top and Bottom"
             >
-              <Rows size={16} />
+              <Rows size={14} />
             </button>
           </div>
 
           <button 
+            onClick={handleReset}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors h-9 w-9 flex items-center justify-center ml-1"
+            title="Reset to default settings & code"
+          >
+            <RotateCcw size={16} />
+          </button>
+
+          <button 
             onClick={handleRun}
             disabled={isLoading}
-            className="btn-primary"
+            className="bg-blue-500 hover:bg-blue-600 text-white h-9 px-4 ml-1 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
           >
-            <Play size={16} fill="currentColor" />
-            {isLoading ? 'Running...' : 'Run Code'}
+            {isLoading ? (
+               <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+               <Play size={14} fill="currentColor" />
+            )}
+            <span className="hidden sm:inline font-medium text-sm">{isLoading ? 'Running' : 'Run'}</span>
           </button>
         </div>
       </header>
@@ -327,7 +370,7 @@ function App() {
                     <div className="flex flex-col h-full overflow-hidden">
                       {/* Global Results Status */}
                       <div className="mb-4 shrink-0">
-                        <h2 className={`text-2xl font-bold ${globalStatus === 'Accepted' ? 'text-green-500' : 'text-red-500'}`}>{globalStatus}</h2>
+                        <h2 className={`text-2xl font-bold ${globalStatus === 'Accepted' ? 'text-green-500' : globalStatus === 'Output Generated' ? 'text-blue-400' : 'text-red-500'}`}>{globalStatus}</h2>
                         {globalStatus !== "Error" && (
                           <p className="text-sm text-neutral-400 mt-1">Runtime: {totalRuntime} ms</p>
                         )}
