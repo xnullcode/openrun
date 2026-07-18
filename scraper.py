@@ -50,6 +50,15 @@ async def scrape_problem(url: str) -> Dict[str, Any]:
                 
             title = prob_data.get('problem_name', 'Unknown Title')
             content = prob_data.get('problem_statement', '')
+            
+            for i in range(1, 10):
+                ex_key = f'example{i}'
+                if ex_key in prob_data and prob_data[ex_key]:
+                    content += f"<h3>Example {i}:</h3>\n" + prob_data[ex_key] + "\n"
+                    
+            if 'constraints' in prob_data and prob_data['constraints']:
+                content += f"<h3>Constraints:</h3>\n" + prob_data['constraints'] + "\n"
+                
             description_html = content
             description_text = re.sub(r'<[^>]+>', '', content)
             
