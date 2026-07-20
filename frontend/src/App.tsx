@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
-import { Play, Download, Plus, Minus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows, RotateCcw, Sun, Moon } from 'lucide-react';
+import { Play, Download, Plus, Minus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows, RotateCcw, Sun, Moon, Settings, LayoutTemplate, BookOpen, RefreshCw, X } from 'lucide-react';
 import axios from 'axios';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import Timer from './components/Timer';
@@ -46,10 +46,19 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
   
-  // Layout state
+  // Layout & Settings state
   const [layoutOrientation, setLayoutOrientation] = useState<"horizontal" | "vertical">("horizontal");
   const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('openrun_theme') as 'light' | 'dark') || 'dark');
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem('openrun_fontsize') || '14'));
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showDescription, setShowDescription] = useState(() => localStorage.getItem('openrun_show_desc') !== 'false');
+
+  useEffect(() => {
+    localStorage.setItem('openrun_show_desc', showDescription.toString());
+    if (!showDescription && activeTab === 'description') {
+      setActiveTab('tests');
+    }
+  }, [showDescription]);
 
   useEffect(() => {
     localStorage.setItem('openrun_fontsize', fontSize.toString());
@@ -242,34 +251,58 @@ function App() {
         <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
           <Timer />
 
-          <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-1.5 rounded-lg text-textMuted hover:text-textMain hover:bg-secondary transition-colors h-9 w-9 flex items-center justify-center">
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-
-          <div className="hidden md:flex items-center gap-1 bg-secondary p-1 rounded-lg ml-1">
-            <button
-              onClick={() => setLayoutOrientation("horizontal")}
-              className={`p-1.5 rounded-md transition-colors ${layoutOrientation === "horizontal" ? "bg-primary text-surface dark:text-[#1a2e60] shadow-sm" : "text-textMuted hover:text-textMain"}`}
-              title="Side by Side"
-            >
-              <Columns size={14} />
-            </button>
-            <button
-              onClick={() => setLayoutOrientation("vertical")}
-              className={`p-1.5 rounded-md transition-colors ${layoutOrientation === "vertical" ? "bg-primary text-surface dark:text-[#1a2e60] shadow-sm" : "text-textMuted hover:text-textMain"}`}
-              title="Top and Bottom"
-            >
-              <Rows size={14} />
-            </button>
-          </div>
-
           <button 
             onClick={handleReset}
-            className="p-1.5 rounded-lg text-textMuted hover:text-textMain hover:bg-secondary transition-colors h-9 w-9 flex items-center justify-center ml-0.5"
+            className="p-1.5 rounded-lg text-textMuted hover:text-textMain hover:bg-secondary transition-colors h-9 w-9 flex items-center justify-center ml-1"
             title="Reset to default settings & code"
           >
             <RotateCcw size={16} />
           </button>
+
+          <div className="relative">
+            <button onClick={() => setIsSettingsOpen(!isSettingsOpen)} className={`p-1.5 rounded-lg transition-colors h-9 w-9 flex items-center justify-center ${isSettingsOpen ? 'bg-secondary text-textMain' : 'text-textMuted hover:text-textMain hover:bg-secondary'}`} title="Settings">
+              <Settings size={16} />
+            </button>
+            {/* Settings Dropdown (Material You Style) */}
+            {isSettingsOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsSettingsOpen(false)}></div>
+                <div className="absolute right-0 top-full mt-2 w-[320px] bg-[#1c1d21] rounded-[24px] p-4 shadow-2xl z-50 border border-white/5">
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Theme Toggle */}
+                    <button 
+                      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors ${theme === 'dark' ? 'bg-primary text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
+                    >
+                      <div className="mb-2">{theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}</div>
+                      <span className="font-medium text-sm">Theme</span>
+                      <span className="text-xs opacity-70">{theme === 'dark' ? 'Dark' : 'Light'}</span>
+                    </button>
+
+                    {/* Layout Toggle */}
+                    <button 
+                      onClick={() => setLayoutOrientation(layoutOrientation === 'horizontal' ? 'vertical' : 'horizontal')}
+                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors ${layoutOrientation === 'vertical' ? 'bg-primary text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
+                    >
+                      <div className="mb-2">{layoutOrientation === 'horizontal' ? <Columns size={20} /> : <Rows size={20} />}</div>
+                      <span className="font-medium text-sm">Layout</span>
+                      <span className="text-xs opacity-70">{layoutOrientation === 'horizontal' ? 'Side-by-Side' : 'Top & Bottom'}</span>
+                    </button>
+
+                    {/* Description Toggle */}
+                    <button 
+                      onClick={() => setShowDescription(!showDescription)}
+                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors col-span-2 ${showDescription ? 'bg-primary text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
+                    >
+                      <div className="mb-2"><BookOpen size={20} /></div>
+                      <span className="font-medium text-sm">Description Pane</span>
+                      <span className="text-xs opacity-70">{showDescription ? 'Enabled' : 'Disabled'}</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
           <button 
             onClick={handleRun}
@@ -334,12 +367,14 @@ function App() {
           <Panel defaultSize={50} minSize={20} className="flex flex-col bg-background">
             {/* Tabs Header */}
             <div className="h-10 bg-surface border-b border-border flex shrink-0">
-              <button 
-                className={`flex-1 text-sm font-medium transition-colors ${activeTab === 'description' ? 'text-primary border-b-2 border-primary' : 'text-textMuted hover:text-white'}`}
-                onClick={() => setActiveTab('description')}
-              >
-                Description
-              </button>
+              {showDescription && (
+                <button 
+                  className={`flex-1 text-sm font-medium transition-colors ${activeTab === 'description' ? 'text-primary border-b-2 border-primary' : 'text-textMuted hover:text-white'}`}
+                  onClick={() => setActiveTab('description')}
+                >
+                  Description
+                </button>
+              )}
               <button 
                 className={`flex-1 text-sm font-medium transition-colors ${activeTab === 'tests' ? 'text-primary border-b-2 border-primary' : 'text-textMuted hover:text-white'}`}
                 onClick={() => setActiveTab('tests')}
@@ -496,6 +531,7 @@ function App() {
           </Panel>
         </Group>
       </div>
+
     </div>
   );
 }
