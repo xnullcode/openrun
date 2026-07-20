@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
-import { Play, Download, Plus, Minus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows, RotateCcw, Sun, Moon, Settings, LayoutTemplate, BookOpen, RefreshCw, X } from 'lucide-react';
+import { Play, Download, Plus, Minus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows, RotateCcw, Sun, Moon, Settings, BookOpen } from 'lucide-react';
 import axios from 'axios';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import Timer from './components/Timer';
