@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
-import { Play, Download, Plus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows, RotateCcw } from 'lucide-react';
+import { Play, Download, Plus, Minus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows, RotateCcw, Sun, Moon } from 'lucide-react';
 import axios from 'axios';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import Timer from './components/Timer';
@@ -48,6 +48,32 @@ function App() {
   
   // Layout state
   const [layoutOrientation, setLayoutOrientation] = useState<"horizontal" | "vertical">("horizontal");
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('openrun_theme') as 'light' | 'dark') || 'dark');
+  const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem('openrun_fontsize') || '14'));
+
+  useEffect(() => {
+    localStorage.setItem('openrun_fontsize', fontSize.toString());
+  }, [fontSize]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setLayoutOrientation("vertical");
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('openrun_theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   const handleReset = () => {
     if (window.confirm("Are you sure you want to reset all code, test cases, and settings? This cannot be undone.")) {
@@ -176,20 +202,23 @@ function App() {
   return (
     <div className="h-screen w-screen flex flex-col bg-background text-textMain overflow-hidden font-sans">
       {/* Header */}
-      <header className="h-14 border-b border-border bg-surface px-6 flex items-center justify-between shadow-md z-10 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary p-1.5 rounded-lg text-[#1a2e60]">
+      <header className="py-2 min-h-[56px] border-b border-border bg-surface px-3 md:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3 shadow-md z-10 shrink-0">
+        
+        {/* Left side: Logo */}
+        <div className="flex items-center gap-2 md:gap-3 shrink-0">
+          <div className="bg-primary p-1.5 rounded-lg text-surface dark:text-[#1a2e60]">
             <Cpu size={18} />
           </div>
-          <h1 className="text-lg font-bold tracking-tight text-white hidden sm:block">OpenRun</h1>
+          <h1 className="text-lg font-bold tracking-tight text-textMain">OpenRun</h1>
         </div>
 
-        <div className="flex items-center flex-1 max-w-lg mx-6">
-          <div className="flex-1 flex gap-1 bg-secondary/50 border border-border p-1 rounded-lg">
+        {/* Center: URL Input (Drops to second line on mobile) */}
+        <div className="flex items-center w-full md:w-auto md:flex-1 md:max-w-lg md:mx-6 order-last md:order-none shrink-0 md:shrink">
+          <div className="flex-1 flex gap-1 bg-secondary border border-border p-1 rounded-lg">
             <input 
               type="text" 
               placeholder="Paste LeetCode/TUF URL..." 
-              className="bg-transparent border-none text-white focus:ring-0 text-sm flex-1 px-3 py-1 outline-none min-w-[150px]"
+              className="bg-transparent border-none text-textMain placeholder:text-textMuted focus:ring-0 text-sm flex-1 px-3 py-1 outline-none min-w-[150px]"
               value={scrapeUrl}
               onChange={e => setScrapeUrl(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleScrape()}
@@ -197,11 +226,11 @@ function App() {
             <button 
               onClick={handleScrape}
               disabled={isScraping || !scrapeUrl}
-              className="bg-primary hover:bg-primary/90 text-white rounded-md px-3 py-1.5 flex items-center justify-center transition-colors disabled:opacity-50 min-w-[32px]"
+              className="bg-primary hover:opacity-90 text-surface dark:text-[#1a2e60] rounded-md px-3 py-1.5 flex items-center justify-center transition-colors disabled:opacity-50 min-w-[32px]"
               title="Scrape Problem"
             >
               {isScraping ? (
-                 <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                 <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
               ) : (
                  <Download size={14} />
               )}
@@ -209,20 +238,25 @@ function App() {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        {/* Right side: Action Buttons */}
+        <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
           <Timer />
 
-          <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-lg ml-2">
+          <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-1.5 rounded-lg text-textMuted hover:text-textMain hover:bg-secondary transition-colors h-9 w-9 flex items-center justify-center">
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+
+          <div className="hidden md:flex items-center gap-1 bg-secondary p-1 rounded-lg ml-1">
             <button
               onClick={() => setLayoutOrientation("horizontal")}
-              className={`p-1.5 rounded-md transition-colors ${layoutOrientation === "horizontal" ? "bg-blue-500 text-white shadow-sm" : "text-slate-400 hover:text-white"}`}
+              className={`p-1.5 rounded-md transition-colors ${layoutOrientation === "horizontal" ? "bg-primary text-surface dark:text-[#1a2e60] shadow-sm" : "text-textMuted hover:text-textMain"}`}
               title="Side by Side"
             >
               <Columns size={14} />
             </button>
             <button
               onClick={() => setLayoutOrientation("vertical")}
-              className={`p-1.5 rounded-md transition-colors ${layoutOrientation === "vertical" ? "bg-blue-500 text-white shadow-sm" : "text-slate-400 hover:text-white"}`}
+              className={`p-1.5 rounded-md transition-colors ${layoutOrientation === "vertical" ? "bg-primary text-surface dark:text-[#1a2e60] shadow-sm" : "text-textMuted hover:text-textMain"}`}
               title="Top and Bottom"
             >
               <Rows size={14} />
@@ -231,7 +265,7 @@ function App() {
 
           <button 
             onClick={handleReset}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors h-9 w-9 flex items-center justify-center ml-1"
+            className="p-1.5 rounded-lg text-textMuted hover:text-textMain hover:bg-secondary transition-colors h-9 w-9 flex items-center justify-center ml-0.5"
             title="Reset to default settings & code"
           >
             <RotateCcw size={16} />
@@ -240,14 +274,14 @@ function App() {
           <button 
             onClick={handleRun}
             disabled={isLoading}
-            className="bg-blue-500 hover:bg-blue-600 text-white h-9 px-4 ml-1 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+            className="bg-primary hover:opacity-90 text-surface dark:text-[#1a2e60] h-9 px-3 md:px-4 ml-0.5 rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
           >
             {isLoading ? (
-               <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+               <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
             ) : (
                <Play size={14} fill="currentColor" />
             )}
-            <span className="hidden sm:inline font-medium text-sm">{isLoading ? 'Running' : 'Run'}</span>
+            <span className="hidden md:inline font-medium text-sm">{isLoading ? 'Running' : 'Run'}</span>
           </button>
         </div>
       </header>
@@ -257,19 +291,28 @@ function App() {
         <Group orientation={layoutOrientation} className="w-full h-full">
           {/* Editor Panel */}
           <Panel defaultSize={50} minSize={20} className="flex flex-col bg-background">
-            <div className="h-10 bg-surface border-b border-border flex items-center px-4 text-sm font-medium text-textMuted shrink-0">
-              Solution.java
+            <div className="h-10 bg-surface border-b border-border flex items-center justify-between px-4 text-sm font-medium text-textMuted shrink-0">
+              <span>Solution.java</span>
+              <div className="flex items-center gap-1.5 bg-secondary px-2 py-1 rounded-md">
+                <button onClick={() => setFontSize(f => Math.max(10, f - 1))} className="hover:text-textMain transition-colors" title="Decrease Font Size">
+                  <Minus size={14} />
+                </button>
+                <span className="w-5 text-center text-xs text-textMain select-none">{fontSize}</span>
+                <button onClick={() => setFontSize(f => Math.min(30, f + 1))} className="hover:text-textMain transition-colors" title="Increase Font Size">
+                  <Plus size={14} />
+                </button>
+              </div>
             </div>
             <div className="flex-1 overflow-hidden">
               <Editor
                 height="100%"
                 defaultLanguage="java"
-                theme="vs-dark"
+                theme={theme === 'dark' ? 'vs-dark' : 'light'}
                 value={code}
                 onChange={(val: string | undefined) => setCode(val || '')}
                 options={{
                   minimap: { enabled: false },
-                  fontSize: 14,
+                  fontSize: fontSize,
                   fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
                   padding: { top: 16 }
                 }}
@@ -333,14 +376,14 @@ function App() {
                       <button 
                         key={idx}
                         onClick={() => setActiveCaseIndex(idx)}
-                        className={`px-3 py-1 text-sm font-medium rounded-md whitespace-nowrap transition-colors ${activeCaseIndex === idx ? 'bg-neutral-700 text-white' : 'text-neutral-400 hover:bg-neutral-800'}`}
+                        className={`px-3 py-1 text-sm font-medium rounded-md whitespace-nowrap transition-colors ${activeCaseIndex === idx ? 'bg-primary/20 text-primary' : 'text-textMuted hover:bg-secondary/50'}`}
                       >
                         Case {idx + 1}
                       </button>
                     ))}
                     <button 
                       onClick={addTestCase}
-                      className="px-3 py-1 text-sm font-medium rounded-md text-neutral-400 hover:bg-neutral-800 transition-colors flex items-center justify-center"
+                      className="px-3 py-1 text-sm font-medium rounded-md text-textMuted hover:bg-secondary/50 transition-colors flex items-center justify-center"
                       title="Add Test Case"
                     >
                       <Plus size={16} />
@@ -363,7 +406,7 @@ function App() {
                       <div className="space-y-1">
                         <label className="text-xs text-neutral-400">Input</label>
                         <textarea
-                          className="w-full bg-neutral-800/50 rounded-md p-3 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary text-white resize-y min-h-[100px]"
+                          className="w-full bg-secondary rounded-md p-3 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary text-textMain resize-y min-h-[100px]"
                           value={currentTest.input}
                           onChange={e => updateTestCase(activeCaseIndex, 'input', e.target.value)}
                           placeholder="Enter input..."
@@ -372,7 +415,7 @@ function App() {
                       <div className="space-y-1">
                         <label className="text-xs text-neutral-400">Expected Output</label>
                         <textarea
-                          className="w-full bg-neutral-800/50 rounded-md p-3 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary text-white resize-y min-h-[100px]"
+                          className="w-full bg-secondary rounded-md p-3 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary text-textMain resize-y min-h-[100px]"
                           value={currentTest.expectedOutput}
                           onChange={e => updateTestCase(activeCaseIndex, 'expectedOutput', e.target.value)}
                           placeholder="Enter expected output..."
@@ -410,7 +453,7 @@ function App() {
                           <button 
                             key={idx}
                             onClick={() => setActiveCaseIndex(idx)}
-                            className={`px-3 py-1 text-sm font-medium rounded-md whitespace-nowrap transition-colors flex items-center gap-2 ${safeResultIndex === idx ? 'bg-neutral-700 text-white' : 'text-neutral-400 hover:bg-neutral-800'}`}
+                            className={`px-3 py-1 text-sm font-medium rounded-md whitespace-nowrap transition-colors flex items-center gap-2 ${safeResultIndex === idx ? 'bg-primary/20 text-primary' : 'text-textMuted hover:bg-secondary/50'}`}
                           >
                             {res.passed ? <CheckCircle size={14} className="text-green-500" /> : <XCircle size={14} className="text-red-500" />}
                             {res.testCaseIndex === -1 ? 'Execution Error' : `Case ${idx + 1}`}
@@ -424,22 +467,22 @@ function App() {
                           {currentResult.error && (
                             <div className="space-y-1">
                               <label className="text-xs text-red-400 uppercase tracking-wider font-semibold">Error / Stderr</label>
-                              <pre className="w-full bg-neutral-800/50 rounded-md p-3 text-sm font-mono text-red-300 overflow-x-auto whitespace-pre-wrap min-h-[100px]">{currentResult.error}</pre>
+                              <pre className="w-full bg-secondary rounded-md p-3 text-sm font-mono text-red-500 overflow-x-auto whitespace-pre-wrap min-h-[100px]">{currentResult.error}</pre>
                             </div>
                           )}
                           {!currentResult.error && (
                             <>
                               <div className="space-y-1">
                                 <label className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">Input</label>
-                                <pre className="w-full bg-neutral-800/50 rounded-md p-3 text-sm font-mono text-white overflow-x-auto whitespace-pre-wrap min-h-[60px]">{testCases[safeResultIndex]?.input || "N/A"}</pre>
+                                <pre className="w-full bg-secondary rounded-md p-3 text-sm font-mono text-textMain overflow-x-auto whitespace-pre-wrap min-h-[60px]">{testCases[safeResultIndex]?.input || "N/A"}</pre>
                               </div>
                               <div className="space-y-1">
                                 <label className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">Output</label>
-                                <pre className="w-full bg-neutral-800/50 rounded-md p-3 text-sm font-mono text-white overflow-x-auto whitespace-pre-wrap min-h-[60px]">{currentResult.output || <span className="text-gray-600 italic">No output</span>}</pre>
+                                <pre className="w-full bg-secondary rounded-md p-3 text-sm font-mono text-textMain overflow-x-auto whitespace-pre-wrap min-h-[60px]">{currentResult.output || <span className="text-gray-500 italic">No output</span>}</pre>
                               </div>
                               <div className="space-y-1">
                                 <label className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">Expected</label>
-                                <pre className="w-full bg-neutral-800/50 rounded-md p-3 text-sm font-mono text-white overflow-x-auto whitespace-pre-wrap min-h-[60px]">{currentResult.expectedOutput || <span className="text-gray-600 italic">None</span>}</pre>
+                                <pre className="w-full bg-secondary rounded-md p-3 text-sm font-mono text-textMain overflow-x-auto whitespace-pre-wrap min-h-[60px]">{currentResult.expectedOutput || <span className="text-gray-500 italic">None</span>}</pre>
                               </div>
                             </>
                           )}

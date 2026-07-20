@@ -3,8 +3,28 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-background: #d4d4d8;
+    --color-surface: #e4e4e7;
+    --color-primary: #1a2e60;
+    --color-secondary: #a1a1aa;
+    --color-border: #71717a;
+    --color-text-main: #18181b;
+    --color-text-muted: #3f3f46;
+  }
+  
+  .dark {
+    --color-background: #131417;
+    --color-surface: #1e1f25;
+    --color-primary: #b4c5ff;
+    --color-secondary: #2b2d35;
+    --color-border: #3f414a;
+    --color-text-main: #f4f4f5;
+    --color-text-muted: #a1a1aa;
+  }
+
   body {
-    @apply bg-background text-textMain m-0 p-0 font-sans antialiased overflow-hidden;
+    @apply bg-background text-textMain m-0 p-0 font-sans antialiased overflow-hidden transition-colors duration-300;
   }
 }
 
@@ -13,18 +33,18 @@
     @apply bg-surface bg-opacity-80 backdrop-blur-md border border-border shadow-xl;
   }
   .btn-primary {
-    @apply bg-primary hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2;
+    @apply bg-primary hover:opacity-90 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2;
   }
   .input-field {
-    @apply bg-secondary border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary transition-colors text-white;
+    @apply bg-secondary border border-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary transition-colors text-textMain;
   }
 }
 
-  .problem-description p { @apply mb-4 leading-relaxed; }
-  .problem-description ul, .problem-description ol { @apply list-disc list-outside mb-4 ml-5; }
-  .problem-description pre { @apply bg-secondary p-4 rounded-xl border border-border overflow-x-auto mb-4 font-mono text-[13px] text-gray-300 shadow-inner; }
-  .problem-description code { @apply bg-secondary px-1.5 py-0.5 rounded-md text-xs font-mono text-gray-200 border border-border; }
-  .problem-description pre code { @apply bg-transparent p-0 border-none text-[13px]; }
-  .problem-description strong { @apply text-white font-semibold; }
-  .problem-description h1, .problem-description h2, .problem-description h3 { @apply text-white font-bold mt-6 mb-3; }
-  .problem-description img { @apply max-w-full rounded-lg my-4; }
+.problem-description p { @apply mb-4 leading-relaxed; }
+.problem-description ul, .problem-description ol { @apply list-disc list-outside mb-4 ml-5; }
+.problem-description pre { @apply bg-secondary p-4 rounded-xl border border-border overflow-x-auto mb-4 font-mono text-[13px] text-textMain shadow-inner; }
+.problem-description code { @apply bg-secondary px-1.5 py-0.5 rounded-md text-xs font-mono text-textMain border border-border; }
+.problem-description pre code { @apply bg-transparent p-0 border-none text-[13px]; }
+.problem-description strong { @apply text-textMain font-semibold; }
+.problem-description h1, .problem-description h2, .problem-description h3 { @apply text-textMain font-bold mt-6 mb-3; }
+.problem-description img { @apply max-w-full rounded-lg my-4; }
