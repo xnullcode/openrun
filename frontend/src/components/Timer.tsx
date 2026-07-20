@@ -148,8 +148,8 @@ export default function Timer() {
   const displayTime = isTimer ? timeRemaining : timeElapsed;
   
   const isWarning = isTimer && initialTimerDuration > 0 && timeRemaining <= initialTimerDuration * 0.1;
-  const bgColor = isWarning ? 'bg-red-600 border-red-500' : 'bg-[#2b2b2b] border-border';
-  const textColor = isWarning ? 'text-white' : (isTimer ? 'text-orange-500' : 'text-blue-400');
+  const bgColor = isWarning ? 'bg-red-600 border-red-500' : 'bg-surface border-border';
+  const textColor = isWarning ? 'text-white' : (isTimer ? 'text-orange-500' : 'text-primary');
 
   return (
     <div className="relative" ref={popoverRef}>
@@ -181,7 +181,7 @@ export default function Timer() {
       ) : (
         <button 
           onClick={() => setShowPopover(!showPopover)}
-          className={`p-2 rounded-lg transition-colors h-9 w-9 flex items-center justify-center ${showPopover ? 'bg-secondary text-blue-400' : 'text-textMuted hover:text-blue-400 hover:bg-secondary'}`}
+          className={`p-2 rounded-lg transition-colors h-9 w-9 flex items-center justify-center ${showPopover ? 'bg-secondary text-primary' : 'text-textMuted hover:text-primary hover:bg-secondary'}`}
           title="Open Timer"
         >
           <TimerIcon size={18} />
@@ -189,7 +189,7 @@ export default function Timer() {
       )}
 
       {showPopover && (
-        <div className="absolute top-12 right-0 bg-[#262626] border border-[#3e3e3e] rounded-xl shadow-xl p-3 z-50 animate-in fade-in zoom-in-95 duration-100 min-w-[280px]">
+        <div className="absolute top-12 right-0 bg-surface border border-border rounded-xl shadow-xl p-3 z-50 animate-in fade-in zoom-in-95 duration-100 min-w-[280px]">
           <div className="flex gap-2 mb-3 h-[120px]">
             {mode === 'stopwatch' ? (
               <>
@@ -197,14 +197,14 @@ export default function Timer() {
                   <TimerIcon size={24} className="text-blue-500" />
                   <span className="text-xs font-medium text-white">Stopwatch</span>
                 </button>
-                <button onClick={() => setMode('timer')} className="flex-1 flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-[#444] hover:bg-white/5 transition-colors h-full">
+                <button onClick={() => setMode('timer')} className="flex-1 flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-border hover:bg-secondary transition-colors h-full">
                   <Clock size={24} className="text-orange-500" />
                   <span className="text-xs font-medium text-gray-400">Timer</span>
                 </button>
               </>
             ) : (
               <>
-                <button onClick={() => setMode('stopwatch')} className="w-16 flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-[#444] hover:bg-white/5 transition-colors h-full">
+                <button onClick={() => setMode('stopwatch')} className="w-16 flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-border hover:bg-secondary transition-colors h-full">
                   <TimerIcon size={24} className="text-blue-500" />
                 </button>
                 <div className="flex-1 flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-orange-500 bg-orange-500/10 h-full">
@@ -215,7 +215,7 @@ export default function Timer() {
                         type="text" 
                         value={timerHours} 
                         onChange={handleHourChange} 
-                        className="w-11 h-9 bg-transparent border border-[#555] rounded-lg text-center text-white text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
+                        className="w-11 h-9 bg-transparent border border-border rounded-lg text-center text-white text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
                         onBlur={() => setTimerHours(prev => (prev || '0').padStart(2, '0'))}
                       />
                       <span className="text-xs text-gray-400">hr</span>
@@ -225,7 +225,7 @@ export default function Timer() {
                         type="text" 
                         value={timerMinutes} 
                         onChange={handleMinuteChange} 
-                        className="w-11 h-9 bg-transparent border border-[#555] rounded-lg text-center text-white text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
+                        className="w-11 h-9 bg-transparent border border-border rounded-lg text-center text-white text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
                         onBlur={() => setTimerMinutes(prev => (prev || '0').padStart(2, '0'))}
                       />
                       <span className="text-xs text-gray-400">min</span>
@@ -239,7 +239,7 @@ export default function Timer() {
           {isActive ? (
             <button 
               onClick={handleClose}
-              className="w-full bg-[#383838] hover:bg-[#444] text-[#ff4b4b] font-semibold text-sm py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors border border-[#4a4a4a]"
+              className="w-full bg-secondary hover:bg-border text-red-500 font-semibold text-sm py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors border border-border"
             >
               <Square size={14} fill="currentColor" />
               {mode === 'stopwatch' ? 'End Stopwatch' : 'End Timer'}
@@ -248,7 +248,7 @@ export default function Timer() {
             <button 
               onClick={handleStart}
               disabled={mode === 'timer' && parseInt(timerHours || '0') === 0 && parseInt(timerMinutes || '0') === 0}
-              className="w-full bg-[#f2f2f2] hover:bg-white disabled:opacity-50 disabled:hover:bg-[#f2f2f2] text-black font-semibold text-sm py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors"
+              className="w-full bg-textMain hover:bg-white disabled:opacity-50 disabled:hover:bg-textMain text-background font-semibold text-sm py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors"
             >
               <Play size={16} fill="currentColor" />
               {mode === 'stopwatch' ? 'Start Stopwatch' : 'Start Timer'}

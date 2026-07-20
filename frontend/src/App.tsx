@@ -178,7 +178,7 @@ function App() {
       {/* Header */}
       <header className="h-14 border-b border-border bg-surface px-6 flex items-center justify-between shadow-md z-10 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="bg-primary p-1.5 rounded-lg text-white">
+          <div className="bg-primary p-1.5 rounded-lg text-[#1a2e60]">
             <Cpu size={18} />
           </div>
           <h1 className="text-lg font-bold tracking-tight text-white hidden sm:block">OpenRun</h1>
