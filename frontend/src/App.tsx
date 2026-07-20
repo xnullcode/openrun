@@ -51,14 +51,11 @@ function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('openrun_theme') as 'light' | 'dark') || 'dark');
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem('openrun_fontsize') || '14'));
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showDescription, setShowDescription] = useState(() => localStorage.getItem('openrun_show_desc') !== 'false');
+  const [showToolsPane, setShowToolsPane] = useState(() => localStorage.getItem('openrun_show_tools') !== 'false');
 
   useEffect(() => {
-    localStorage.setItem('openrun_show_desc', showDescription.toString());
-    if (!showDescription && activeTab === 'description') {
-      setActiveTab('tests');
-    }
-  }, [showDescription]);
+    localStorage.setItem('openrun_show_tools', showToolsPane.toString());
+  }, [showToolsPane]);
 
   useEffect(() => {
     localStorage.setItem('openrun_fontsize', fontSize.toString());
@@ -289,14 +286,14 @@ function App() {
                       <span className="text-xs opacity-70">{layoutOrientation === 'horizontal' ? 'Side-by-Side' : 'Top & Bottom'}</span>
                     </button>
 
-                    {/* Description Toggle */}
+                    {/* Tools Pane Toggle */}
                     <button 
-                      onClick={() => setShowDescription(!showDescription)}
-                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors col-span-2 ${showDescription ? 'bg-primary text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
+                      onClick={() => setShowToolsPane(!showToolsPane)}
+                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors col-span-2 ${showToolsPane ? 'bg-primary text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
                     >
                       <div className="mb-2"><BookOpen size={20} /></div>
-                      <span className="font-medium text-sm">Description Pane</span>
-                      <span className="text-xs opacity-70">{showDescription ? 'Enabled' : 'Disabled'}</span>
+                      <span className="font-medium text-sm">Tools Pane</span>
+                      <span className="text-xs opacity-70">{showToolsPane ? 'Enabled' : 'Disabled'}</span>
                     </button>
                   </div>
                 </div>
@@ -353,28 +350,28 @@ function App() {
             </div>
           </Panel>
 
-          <Separator 
-            className={`transition-colors flex items-center justify-center group ${
-              layoutOrientation === "horizontal" 
-                ? "w-2 h-full bg-surface border-x border-border hover:bg-primary/20 cursor-col-resize active:bg-primary/40" 
-                : "h-2 w-full bg-surface border-y border-border hover:bg-primary/20 cursor-row-resize active:bg-primary/40"
-            }`}
-          >
-            <div className={`${layoutOrientation === "horizontal" ? "h-8 w-1" : "w-8 h-1"} bg-gray-600 rounded-full group-hover:bg-primary transition-colors`} />
-          </Separator>
+          {showToolsPane && (
+            <>
+              <Separator 
+                className={`transition-colors flex items-center justify-center group ${
+                  layoutOrientation === "horizontal" 
+                    ? "w-2 h-full bg-surface border-x border-border hover:bg-primary/20 cursor-col-resize active:bg-primary/40" 
+                    : "h-2 w-full bg-surface border-y border-border hover:bg-primary/20 cursor-row-resize active:bg-primary/40"
+                }`}
+              >
+                <div className={`${layoutOrientation === "horizontal" ? "h-8 w-1" : "w-8 h-1"} bg-gray-600 rounded-full group-hover:bg-primary transition-colors`} />
+              </Separator>
 
-          {/* Right/Bottom Pane - Test Cases & Results */}
-          <Panel defaultSize={50} minSize={20} className="flex flex-col bg-background">
+              {/* Right/Bottom Pane - Test Cases & Results */}
+              <Panel defaultSize={50} minSize={20} className="flex flex-col bg-background">
             {/* Tabs Header */}
             <div className="h-10 bg-surface border-b border-border flex shrink-0">
-              {showDescription && (
-                <button 
-                  className={`flex-1 text-sm font-medium transition-colors ${activeTab === 'description' ? 'text-primary border-b-2 border-primary' : 'text-textMuted hover:text-white'}`}
-                  onClick={() => setActiveTab('description')}
-                >
-                  Description
-                </button>
-              )}
+              <button 
+                className={`flex-1 text-sm font-medium transition-colors ${activeTab === 'description' ? 'text-primary border-b-2 border-primary' : 'text-textMuted hover:text-white'}`}
+                onClick={() => setActiveTab('description')}
+              >
+                Description
+              </button>
               <button 
                 className={`flex-1 text-sm font-medium transition-colors ${activeTab === 'tests' ? 'text-primary border-b-2 border-primary' : 'text-textMuted hover:text-white'}`}
                 onClick={() => setActiveTab('tests')}
@@ -528,7 +525,9 @@ function App() {
                 </div>
               )}
             </div>
-          </Panel>
+              </Panel>
+            </>
+          )}
         </Group>
       </div>
 
