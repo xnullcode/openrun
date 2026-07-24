@@ -155,7 +155,7 @@ export default function Timer() {
     <div className="relative" ref={popoverRef}>
       {isActive ? (
         <div className={`group flex items-center ${bgColor} px-2 py-1.5 rounded-lg text-sm ${isWarning ? 'text-white/80' : 'text-textMuted'} transition-all border h-9 shadow-sm cursor-default`}>
-          <div className="flex items-center overflow-hidden transition-all duration-300 ease-in-out w-0 opacity-0 group-hover:w-[44px] group-hover:opacity-100">
+          <div className="flex items-center">
             <button onClick={handleClose} className="hover:text-white transition-colors flex-shrink-0 w-[22px] flex items-center justify-center" title="Close Timer">
               <ChevronLeft size={16} />
             </button>
@@ -172,7 +172,7 @@ export default function Timer() {
             {formatTime(displayTime)}
           </button>
 
-          <div className="flex items-center overflow-hidden transition-all duration-300 ease-in-out w-0 opacity-0 group-hover:w-[22px] group-hover:opacity-100">
+          <div className="flex items-center">
             <button onClick={handleReset} className="hover:text-white transition-colors flex-shrink-0 w-[22px] flex items-center justify-center" title="Reset">
               <RotateCcw size={14} />
             </button>

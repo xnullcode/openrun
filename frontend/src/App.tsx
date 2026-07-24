@@ -4,6 +4,7 @@ import { Play, Download, Plus, Minus, Trash2, CheckCircle, XCircle, Cpu, Columns
 import axios from 'axios';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import Timer from './components/Timer';
+import AIChat from './components/AIChat';
 
 interface TestCase {
   input: string;
@@ -531,6 +532,7 @@ function App() {
         </Group>
       </div>
 
+      <AIChat />
     </div>
   );
 }
