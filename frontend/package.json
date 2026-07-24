@@ -16,7 +16,8 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-draggable": "^4.7.0",
-    "react-resizable-panels": "^4.12.2"
+    "react-resizable-panels": "^4.12.2",
+    "react-rnd": "^10.5.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.2",
