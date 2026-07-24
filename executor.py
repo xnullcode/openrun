@@ -7,13 +7,13 @@ import shutil
 import re
 from typing import List, Dict, Any
 
-def inject_harness(code: str) -> tuple[str, str]:
+def inject_harness(code: str) -> tuple[str, str, int]:
     if "public static void main" in code:
-        return code, "Solution"
+        return code, "Solution", 0
 
     match = re.search(r"public\s+([A-Za-z0-9_\[\]<>]+)\s+([A-Za-z0-9_]+)\s*\((.*?)\)", code)
     if not match:
-        return code, "Solution"
+        return code, "Solution", 0
         
     return_type, method_name, params_str = match.groups()
     params = [p.strip() for p in params_str.split(",") if p.strip()]
@@ -74,7 +74,7 @@ def inject_harness(code: str) -> tuple[str, str]:
     else:
         invoke_logic = f"{return_type} result = solver.{method_name}({args_list});\n        System.out.println(result);"
 
-    harness = f"""import java.util.*;
+    harness_header = f"""import java.util.*;
 import java.io.*;
 
 public class Main {{
@@ -87,20 +87,32 @@ public class Main {{
     }}
 }}
 
-{clean_user_code}
 """
-    return harness, "Main"
+    line_offset = harness_header.count("\n")
+    harness = harness_header + clean_user_code + "\n"
+    return harness, "Main", line_offset
 
 async def execute_java_code(code: str, test_cases: List[Dict[str, str]]) -> Dict[str, Any]:
     run_id = str(uuid.uuid4())
     temp_dir = os.path.join(tempfile.gettempdir(), f"openrun_{run_id}")
     os.makedirs(temp_dir, exist_ok=True)
 
-    final_code, main_class = inject_harness(code)
+    final_code, main_class, line_offset = inject_harness(code)
     
     main_file_path = os.path.join(temp_dir, f"{main_class}.java")
     with open(main_file_path, "w") as f:
         f.write(final_code)
+    
+    def map_line_numbers(text: str) -> str:
+        if not text:
+            return text
+        def replace_line(match):
+            line_num = int(match.group(1))
+            mapped_line = line_num - line_offset
+            if mapped_line > 0:
+                return f"Solution.java:{mapped_line}"
+            return f"{main_class}.java:{line_num}"
+        return re.sub(rf"{main_class}\.java:(\d+)", replace_line, text)
     
     try:
         # Compile
@@ -118,7 +130,9 @@ async def execute_java_code(code: str, test_cases: List[Dict[str, str]]) -> Dict
             return {"success": False, "error": "Compilation Timeout"}
 
         if compile_process.returncode != 0:
-            return {"success": False, "error": compile_stderr.decode().strip(), "type": "Compilation Error"}
+            error_output = compile_stderr.decode().strip()
+            mapped_error = map_line_numbers(error_output)
+            return {"success": False, "error": mapped_error, "type": "Compilation Error"}
 
         # Execute test cases
         results = []
@@ -144,6 +158,7 @@ async def execute_java_code(code: str, test_cases: List[Dict[str, str]]) -> Dict
                 
                 output = exec_stdout.decode().strip()
                 error_output = exec_stderr.decode().strip()
+                mapped_error = map_line_numbers(error_output)
                 
                 passed = output == expected_output.strip() if expected_output else True
                 
@@ -152,7 +167,7 @@ async def execute_java_code(code: str, test_cases: List[Dict[str, str]]) -> Dict
                     "passed": passed,
                     "output": output,
                     "expectedOutput": expected_output,
-                    "error": error_output,
+                    "error": mapped_error,
                     "executionTimeMs": round(exec_time * 1000, 2),
                     "memoryUsed": "N/A"
                 })
