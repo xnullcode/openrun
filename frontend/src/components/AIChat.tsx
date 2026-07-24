@@ -24,15 +24,15 @@ function ModelSelector({ provider, model, setModel }: { provider: string, model:
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 text-textMain hover:bg-black/5 dark:hover:bg-white/5 rounded-xl px-2 h-8 transition-colors"
+        className="flex items-center gap-1 text-textMain hover:bg-black/5 dark:hover:bg-white/5 rounded-xl px-2 h-8 transition-colors max-w-full overflow-hidden"
       >
-        <span className="text-[15px] flex items-center gap-1.5 overflow-hidden">
+        <span className="text-[14px] flex items-center gap-1 overflow-hidden whitespace-nowrap flex-nowrap shrink">
           <span className="font-normal opacity-80 shrink-0">{providerName}</span>
-          <span className="font-bold truncate max-w-[120px]" title={model}>
-            {model.length > 16 ? model.substring(0, 16) + '...' : model}
+          <span className="font-bold truncate max-w-[100px]" title={model}>
+            {model.length > 14 ? model.substring(0, 14) + '...' : model}
           </span>
         </span>
-        <ChevronDown size={14} className={`text-textMuted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} className={`text-textMuted shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
@@ -302,7 +302,15 @@ function ChatInnerContent({
                 onClick={() => {
                   if (chatMode !== 'help') {
                     setChatMode('help');
-                    setMessages(prev => [...prev, { role: 'system_alert', content: 'Switched to Help Mode' }]);
+                    setMessages(prev => {
+                      const lastMsg = prev[prev.length - 1];
+                      if (lastMsg && lastMsg.role === 'system_alert' && lastMsg.content.startsWith('Switched to ')) {
+                        const newMsgs = [...prev];
+                        newMsgs[newMsgs.length - 1] = { ...lastMsg, content: 'Switched to Help Mode' };
+                        return newMsgs;
+                      }
+                      return [...prev, { role: 'system_alert', content: 'Switched to Help Mode' }];
+                    });
                   }
                 }}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${chatMode === 'help' ? 'bg-primary text-white dark:text-[#1a2e60] shadow-sm' : 'text-textMuted hover:text-textMain'}`}
@@ -313,7 +321,15 @@ function ChatInnerContent({
                 onClick={() => {
                   if (chatMode !== 'code') {
                     setChatMode('code');
-                    setMessages(prev => [...prev, { role: 'system_alert', content: 'Switched to Code Mode' }]);
+                    setMessages(prev => {
+                      const lastMsg = prev[prev.length - 1];
+                      if (lastMsg && lastMsg.role === 'system_alert' && lastMsg.content.startsWith('Switched to ')) {
+                        const newMsgs = [...prev];
+                        newMsgs[newMsgs.length - 1] = { ...lastMsg, content: 'Switched to Code Mode' };
+                        return newMsgs;
+                      }
+                      return [...prev, { role: 'system_alert', content: 'Switched to Code Mode' }];
+                    });
                   }
                 }}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${chatMode === 'code' ? 'bg-primary text-white dark:text-[#1a2e60] shadow-sm' : 'text-textMuted hover:text-textMain'}`}
@@ -492,11 +508,13 @@ export default function AIChat() {
       <div className="flex flex-col w-full h-full">
         {/* Floating Header */}
         <div className="drag-handle bg-secondary p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-border shrink-0">
-        <div className="flex items-center gap-1 px-2">
-          <Sparkles size={18} className="text-primary shrink-0 mr-1" />
-          <ModelSelector provider={provider} model={model} setModel={setModel} />
-        </div>
-        <div className="flex items-center gap-1 px-1">
+          <div className="flex-1 flex items-center px-2">
+            <Sparkles size={18} className="text-primary shrink-0" />
+          </div>
+          <div className="flex justify-center flex-none">
+            <ModelSelector provider={provider} model={model} setModel={setModel} />
+          </div>
+          <div className="flex-1 flex items-center justify-end gap-1 px-1">
           <button 
             onClick={() => setIsDocked(true)}
             className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
