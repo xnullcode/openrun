@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
-import { Play, Download, Plus, Minus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows, RotateCcw, Sun, Moon, Settings, BookOpen } from 'lucide-react';
+import { Play, Download, Plus, Minus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows, RotateCcw, Sun, Moon, Settings, BookOpen, Sparkles } from 'lucide-react';
 import axios from 'axios';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import Timer from './components/Timer';
-import AIChat from './components/AIChat';
+import AIChat, { DockedAIChat } from './components/AIChat';
+import { useAIChat } from './context/AIChatContext';
 
 interface TestCase {
   input: string;
@@ -40,8 +41,61 @@ function App() {
     return saved ? JSON.parse(saved) : [{ input: '', expectedOutput: '' }];
   });
   const [results, setResults] = useState<TestResult[]>([]);
-  const [activeTab, setActiveTab] = useState<'description' | 'tests' | 'results'>('description');
+  const [activeTab, setActiveTab] = useState<'description' | 'tests' | 'results' | 'ai'>('description');
   const [activeCaseIndex, setActiveCaseIndex] = useState(0);
+  
+  const { isDocked, setEditorRef, setIsChatOpen, setAttachedSnippets } = useAIChat();
+  const editorRef = useRef<any>(null);
+
+  const [selectionPopup, setSelectionPopup] = useState<{ x: number, y: number, text: string } | null>(null);
+
+  const handleEditorDidMount = (editor: any) => {
+    editorRef.current = editor;
+    setEditorRef(editorRef);
+
+    editor.onMouseUp((e: any) => {
+      const selection = editor.getSelection();
+      if (selection && !selection.isEmpty()) {
+        const text = editor.getModel()?.getValueInRange(selection);
+        // e.event.browserEvent contains the standard MouseEvent
+        if (text && e.event.browserEvent) {
+          setSelectionPopup({ 
+            x: e.event.browserEvent.clientX, 
+            y: e.event.browserEvent.clientY - 40, 
+            text 
+          });
+        }
+      } else {
+        setSelectionPopup(null);
+      }
+    });
+
+    editor.onDidChangeCursorSelection((e: any) => {
+      if (e.selection.isEmpty()) {
+        setSelectionPopup(null);
+      }
+    });
+  };
+
+  const handleAskAI = () => {
+    if (selectionPopup) {
+      setAttachedSnippets(prev => [...prev, selectionPopup.text]);
+      if (isDocked) {
+        setActiveTab('ai');
+      } else {
+        setIsChatOpen(true);
+      }
+      setSelectionPopup(null);
+    }
+  };
+
+  useEffect(() => {
+    if (isDocked) {
+      setActiveTab('ai');
+    } else if (activeTab === 'ai') {
+      setActiveTab('description');
+    }
+  }, [isDocked]);
   const [scrapeUrl, setScrapeUrl] = useState('');
   const [problemDescription, setProblemDescription] = useState(() => localStorage.getItem('openrun_desc') || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -209,7 +263,7 @@ function App() {
   return (
     <div className="h-screen w-screen flex flex-col bg-background text-textMain overflow-hidden font-sans">
       {/* Header */}
-      <header className="py-2 min-h-[56px] border-b border-border bg-surface px-3 md:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3 shadow-md z-10 shrink-0">
+      <header className="py-2 min-h-[56px] border-b border-border bg-surface px-3 md:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3 shadow-md z-50 shrink-0">
         
         {/* Left side: Logo */}
         <div className="flex items-center gap-2 md:gap-3 shrink-0">
@@ -341,6 +395,7 @@ function App() {
                 theme={theme === 'dark' ? 'vs-dark' : 'light'}
                 value={code}
                 onChange={(val: string | undefined) => setCode(val || '')}
+                onMount={handleEditorDidMount}
                 options={{
                   minimap: { enabled: false },
                   fontSize: fontSize,
@@ -385,6 +440,14 @@ function App() {
               >
                 Test Result
               </button>
+              {isDocked && (
+                <button 
+                  className={`flex-1 text-sm font-medium transition-colors ${activeTab === 'ai' ? 'text-primary border-b-2 border-primary' : 'text-textMuted hover:text-white'}`}
+                  onClick={() => setActiveTab('ai')}
+                >
+                  AI Chat
+                </button>
+              )}
             </div>
 
             {/* Pane Content */}
@@ -398,6 +461,12 @@ function App() {
                       <p>Scrape a problem to see its description here.</p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {activeTab === 'ai' && isDocked && (
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <DockedAIChat />
                 </div>
               )}
 
@@ -531,6 +600,22 @@ function App() {
           )}
         </Group>
       </div>
+
+      {/* Ask AI Popup */}
+      {selectionPopup && (
+        <div 
+          className="fixed z-[100] transform -translate-x-1/2 -translate-y-full"
+          style={{ left: selectionPopup.x, top: selectionPopup.y - 10 }}
+        >
+          <button
+            onClick={handleAskAI}
+            className="flex items-center gap-2 bg-surface border border-border shadow-2xl rounded-full px-3 py-1.5 text-xs font-bold text-textMain hover:bg-secondary hover:scale-105 transition-all"
+          >
+            <Sparkles size={14} className="text-primary" />
+            Ask AI
+          </button>
+        </div>
+      )}
 
       <AIChat />
     </div>
