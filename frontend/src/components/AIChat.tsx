@@ -409,17 +409,29 @@ export default function AIChat() {
   const { isAIEnabled, isDocked, setIsDocked, isChatOpen, setIsChatOpen, provider, model, setModel } = useAIChat();
 
   const isDraggingRef = useRef(false);
+  const getFabOffset = () => window.innerWidth <= 768 ? 70 : 80;
+  
   const [fabPosition, setFabPosition] = useState({ 
-    x: window.innerWidth - 80, 
-    y: window.innerHeight - 80 
+    x: window.innerWidth - getFabOffset(), 
+    y: window.innerHeight - getFabOffset() 
   });
 
   useEffect(() => {
+    let timeoutId: any;
     const handleResize = () => {
-      setFabPosition({ x: window.innerWidth - 80, y: window.innerHeight - 80 });
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setFabPosition({ 
+          x: window.innerWidth - getFabOffset(), 
+          y: window.innerHeight - getFabOffset() 
+        });
+      }, 200);
     };
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // If AI is entirely disabled, hide everything
@@ -456,10 +468,11 @@ export default function AIChat() {
     );
   }
 
-  const defaultWidth = Math.min(380, window.innerWidth - 40);
-  const defaultHeight = Math.min(550, window.innerHeight - 100);
-  const defaultX = Math.max(20, window.innerWidth - defaultWidth - 24);
-  const defaultY = Math.max(20, window.innerHeight - defaultHeight - 24);
+  const isMobile = window.innerWidth <= 768;
+  const defaultWidth = isMobile ? window.innerWidth - 20 : 380;
+  const defaultHeight = isMobile ? window.innerHeight - 40 : 550;
+  const defaultX = Math.max(10, window.innerWidth - defaultWidth - (isMobile ? 10 : 24));
+  const defaultY = Math.max(10, window.innerHeight - defaultHeight - (isMobile ? 10 : 24));
 
   return (
     <Rnd
