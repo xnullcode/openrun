@@ -334,7 +334,7 @@ function ChatInnerContent({
                   <div className="flex items-center gap-2 bg-secondary rounded-[24px] p-1.5 pl-4 pr-1.5 border border-border focus-within:border-primary/50 transition-colors shadow-inner">
                     <input 
                       type="text" 
-                      placeholder="Ask Anything"
+                      placeholder="Ask anything"
                       className="flex-1 bg-transparent border-none focus:outline-none text-sm text-textMain py-1"
                     />
                     <button className="w-8 h-8 rounded-full bg-primary text-white dark:text-[#1a2e60] flex items-center justify-center hover:scale-105 transition-transform shadow-md">
@@ -353,12 +353,56 @@ function ChatInnerContent({
 // The main floating component
 export default function AIChat() {
   const [activeTab, setActiveTab] = useState<'chat' | 'clipboard' | 'settings'>('chat');
-  const { isDocked, setIsDocked, isChatOpen, setIsChatOpen, provider, model, setModel } = useAIChat();
+  const { isAIEnabled, isDocked, setIsDocked, isChatOpen, setIsChatOpen, provider, model, setModel } = useAIChat();
+
+  const isDraggingRef = useRef(false);
+  const [fabPosition, setFabPosition] = useState({ 
+    x: window.innerWidth - 80, 
+    y: window.innerHeight - 80 
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setFabPosition({ x: window.innerWidth - 80, y: window.innerHeight - 80 });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // If AI is entirely disabled, hide everything
+  if (!isAIEnabled) return null;
 
   // If docked, we hide the floating window entirely
   if (isDocked) return null;
 
-  if (!isChatOpen) return null;
+  if (!isChatOpen) {
+    return (
+      <Rnd
+        key="fab"
+        position={fabPosition}
+        enableResizing={false}
+        bounds="window"
+        className="z-50"
+        onDragStart={() => { isDraggingRef.current = false; }}
+        onDrag={() => { isDraggingRef.current = true; }}
+        onDragStop={(_e, d) => { 
+          setFabPosition({ x: d.x, y: d.y });
+          setTimeout(() => { isDraggingRef.current = false; }, 50);
+        }}
+      >
+        <button
+          onClick={() => {
+            if (!isDraggingRef.current) setIsChatOpen(true);
+          }}
+          className="w-14 h-14 bg-primary text-white dark:text-[#1a2e60] rounded-full shadow-2xl flex items-center justify-center hover:scale-105 transition-all"
+          title="Open AI Assistant"
+        >
+          <Sparkles size={24} />
+        </button>
+      </Rnd>
+    );
+  }
+
   const defaultWidth = Math.min(380, window.innerWidth - 40);
   const defaultHeight = Math.min(550, window.innerHeight - 100);
   const defaultX = Math.max(20, window.innerWidth - defaultWidth - 24);

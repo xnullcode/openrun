@@ -17,6 +17,10 @@ export interface Snippet {
 }
 
 interface AIChatContextType {
+  // Master AI Feature State
+  isAIEnabled: boolean;
+  setIsAIEnabled: React.Dispatch<React.SetStateAction<boolean>>;
+
   // Docking State
   isDocked: boolean;
   setIsDocked: (val: boolean) => void;
@@ -144,8 +148,9 @@ export const PROVIDERS: Record<string, { name: string; defaultBaseUrl: string; d
 };
 
 export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isAIEnabled, setIsAIEnabled] = useState(true);
   const [isDocked, setIsDocked] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [provider, setProvider] = useState<AIProvider>('openai');
   const [baseUrl, setBaseUrl] = useState(PROVIDERS.openai.defaultBaseUrl);
   const [model, setModel] = useState(PROVIDERS.openai.defaultModel);
@@ -182,6 +187,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, []);
 
   const value = {
+    isAIEnabled, setIsAIEnabled,
     isChatOpen, setIsChatOpen,
     isDocked, setIsDocked,
     provider, setProvider,
