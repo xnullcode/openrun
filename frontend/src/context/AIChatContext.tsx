@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
-export type AIProvider = 'openai' | 'groq' | 'anthropic' | 'gemini' | 'custom';
+export type AIProvider = 'openai' | 'groq' | 'anthropic' | 'gemini' | 'openrouter' | 'custom';
 export type AIMode = 'help' | 'code';
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -55,10 +55,43 @@ interface AIChatContextType {
 
 const AIChatContext = createContext<AIChatContextType | undefined>(undefined);
 
-const PROVIDERS = {
-  openai: { name: 'OpenAI', defaultBaseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o' },
-  groq: { name: 'Groq', defaultBaseUrl: 'https://api.groq.com/openai/v1', defaultModel: 'llama-3.1-70b-versatile' },
-  custom: { name: 'Custom (OpenAI Compatible)', defaultBaseUrl: 'http://localhost:11434/v1', defaultModel: 'llama3' },
+export const PROVIDERS: Record<string, { name: string; defaultBaseUrl: string; defaultModel: string; models: string[] }> = {
+  openai: { 
+    name: 'OpenAI', 
+    defaultBaseUrl: 'https://api.openai.com/v1', 
+    defaultModel: 'gpt-4o', 
+    models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'] 
+  },
+  groq: { 
+    name: 'Groq', 
+    defaultBaseUrl: 'https://api.groq.com/openai/v1', 
+    defaultModel: 'llama-3.1-70b-versatile', 
+    models: ['llama-3.1-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma2-9b-it'] 
+  },
+  anthropic: {
+    name: 'Anthropic',
+    defaultBaseUrl: 'https://api.anthropic.com/v1',
+    defaultModel: 'claude-3-5-sonnet-20240620',
+    models: ['claude-3-5-sonnet-20240620', 'claude-3-opus-20240229', 'claude-3-haiku-20240307']
+  },
+  gemini: {
+    name: 'Google Gemini',
+    defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+    defaultModel: 'gemini-1.5-pro',
+    models: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro']
+  },
+  openrouter: {
+    name: 'OpenRouter',
+    defaultBaseUrl: 'https://openrouter.ai/api/v1',
+    defaultModel: 'meta-llama/llama-3.1-70b-instruct',
+    models: ['meta-llama/llama-3.1-70b-instruct', 'meta-llama/llama-3.1-8b-instruct', 'anthropic/claude-3.5-sonnet', 'google/gemini-1.5-pro', 'openai/gpt-4o']
+  },
+  custom: { 
+    name: 'Custom', 
+    defaultBaseUrl: 'http://localhost:11434/v1', 
+    defaultModel: 'llama3', 
+    models: ['llama3', 'mistral', 'custom-model'] 
+  },
 };
 
 export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

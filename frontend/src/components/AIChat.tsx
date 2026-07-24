@@ -2,13 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Rnd } from 'react-rnd';
 import { Sparkles, X, Send, Settings, Lock, Unlock, Save, Eye, EyeOff, Pin, Trash2, PanelRightClose, PanelLeft } from 'lucide-react';
 import { encryptData, decryptData } from '../utils/crypto';
-import { useAIChat, type AIProvider } from '../context/AIChatContext';
-
-const PROVIDERS: Record<string, { name: string; defaultBaseUrl: string; defaultModel: string }> = {
-  openai: { name: 'OpenAI', defaultBaseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o' },
-  groq: { name: 'Groq', defaultBaseUrl: 'https://api.groq.com/openai/v1', defaultModel: 'llama-3.1-70b-versatile' },
-  custom: { name: 'Custom (OpenAI Compatible)', defaultBaseUrl: 'http://localhost:11434/v1', defaultModel: 'llama3' },
-};
+import { useAIChat, type AIProvider, PROVIDERS } from '../context/AIChatContext';
 
 function ChatInnerContent({ 
   activeTab, 
@@ -285,7 +279,7 @@ function ChatInnerContent({
                   <p className="text-sm text-textMain leading-relaxed pt-1">
                     Hello! I'm your AI coding assistant. I'm currently in <span className="font-bold text-primary">{chatMode === 'help' ? 'Helping Mode' : 'Full Code Mode'}</span>.
                     <br/><br/>
-                    Highlight code in the editor and click "Attach Selection" to ask me about it!
+                    Highlight code in the editor to ask me about it!
                   </p>
                 </div>
               </div>
@@ -308,16 +302,7 @@ function ChatInnerContent({
                   </div>
                 )}
 
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <button 
-                      onClick={handleAttachSelection}
-                      className="text-[10px] uppercase tracking-wider font-bold bg-secondary hover:bg-border text-textMuted hover:text-textMain px-2 py-1 rounded-md transition-colors flex items-center gap-1"
-                      title="Attach selected code from editor"
-                    >
-                      <Pin size={10} /> Attach Selection
-                    </button>
-                  </div>
+
                   <div className="flex items-center gap-2 bg-secondary rounded-[24px] p-1.5 pl-4 pr-1.5 border border-border focus-within:border-primary/50 transition-colors shadow-inner">
                     <input 
                       type="text" 
@@ -328,7 +313,6 @@ function ChatInnerContent({
                       <Send size={14} className="ml-[-2px]" />
                     </button>
                   </div>
-                </div>
               </div>
             </>
           )}
@@ -413,10 +397,20 @@ export default function AIChat() {
         {/* Floating Header */}
         <div className="drag-handle bg-secondary p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-border shrink-0">
         <div className="flex items-center gap-2 px-2">
-          <Sparkles size={18} className="text-primary" />
-          <span className="font-bold text-textMain text-sm">AI Assistant</span>
+          <Sparkles size={18} className="text-primary shrink-0" />
+          <span className="font-bold text-textMain text-sm shrink-0">AI Assistant</span>
+          <select 
+            value={model} 
+            onChange={(e) => setModel(e.target.value)} 
+            className="ml-2 bg-background border border-border text-xs rounded-md px-1.5 py-0.5 text-textMuted outline-none max-w-[120px] truncate"
+            title="Select AI Model"
+          >
+            {Array.from(new Set([...(PROVIDERS[provider]?.models || []), model])).map(m => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 px-1">
           <button 
             onClick={() => setIsDocked(true)}
             className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
@@ -454,11 +448,21 @@ export function DockedAIChat() {
   const { setIsDocked } = useAIChat();
   
   return (
-    <div className="flex flex-col h-full w-full bg-surface relative">
-      <div className="bg-secondary p-3 flex items-center justify-between border-b border-border shrink-0">
-        <div className="flex items-center gap-2 px-2">
-          <Sparkles size={18} className="text-primary" />
-          <span className="font-bold text-textMain text-sm">AI Assistant</span>
+    <div className="h-full flex flex-col bg-background relative border-l border-border z-10 w-full min-w-[300px]">
+      <div className="h-12 border-b border-border flex items-center justify-between px-3 bg-surface shrink-0">
+        <div className="flex items-center gap-2">
+          <Sparkles size={16} className="text-primary" />
+          <span className="font-bold text-textMain text-sm shrink-0">AI Assistant</span>
+          <select 
+            value={model} 
+            onChange={(e) => setModel(e.target.value)} 
+            className="ml-2 bg-background border border-border text-xs rounded-md px-1.5 py-0.5 text-textMuted outline-none max-w-[110px] truncate"
+            title="Select AI Model"
+          >
+            {Array.from(new Set([...(PROVIDERS[provider]?.models || []), model])).map(m => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
         </div>
         <div className="flex items-center gap-1">
           <button 
