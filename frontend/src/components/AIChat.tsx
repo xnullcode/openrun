@@ -83,7 +83,7 @@ function CodeBlock({ code, language, editorRef }: { code: string; language: stri
           )}
         </div>
       </div>
-      <pre className="p-3 overflow-x-auto text-[12px] leading-5 font-mono">
+      <pre className="p-3 overflow-x-auto text-[12px] leading-5 font-mono text-[#d4d4d4]">
         <code dangerouslySetInnerHTML={{ __html: highlighted }} />
       </pre>
     </div>
