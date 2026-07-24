@@ -447,10 +447,10 @@ export default function AIChat() {
           </button>
           <button 
             onClick={() => setIsChatOpen(false)}
-            className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-            title="Close"
+            className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 hover:text-red-500 dark:hover:text-red-500 transition-colors"
+            title="Close to FAB"
           >
-            <X size={16} className="text-textMuted" />
+            <X size={16} className="text-textMuted group-hover:text-red-500" />
           </button>
         </div>
       </div>
@@ -494,10 +494,10 @@ export function DockedAIChat() {
               setIsDocked(false);
               setIsChatOpen(false);
             }}
-            className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-            title="Close AI Chat"
+            className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 hover:text-red-500 dark:hover:text-red-500 transition-colors"
+            title="Close to FAB"
           >
-            <X size={16} className="text-textMuted" />
+            <X size={16} className="text-textMuted group-hover:text-red-500" />
           </button>
         </div>
       </div>
