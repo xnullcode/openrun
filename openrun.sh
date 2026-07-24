@@ -134,6 +134,23 @@ do_start() {
     press_enter
 }
 
+do_rebuild() {
+    banner
+    echo -e "  ${BOLD}Rebuilding OpenRun...${RESET}"
+    divider
+    echo ""
+    info "Forcing a clean rebuild of the Docker image..."
+    $DOCKER_CMD compose up -d --build --force-recreate
+    sleep 2
+    
+    if is_server_running; then
+        success "Server successfully rebuilt and started!"
+    else
+        fail "Server failed to start after rebuild."
+    fi
+    press_enter
+}
+
 do_ngrok_only() {
     banner
     echo -e "  ${BOLD}Starting Ngrok Tunnel${RESET}"
@@ -221,6 +238,7 @@ main_menu() {
         echo -e "  ${CYAN}1${RESET})  ${BOLD}Start${RESET}             Launch in Docker & ngrok"
         echo -e "  ${CYAN}2${RESET})  ${BOLD}Stop${RESET}              Shut down services"
         echo -e "  ${CYAN}3${RESET})  ${BOLD}Status${RESET}            View detailed status and URLs"
+        echo -e "  ${CYAN}4${RESET})  ${BOLD}Rebuild${RESET}           Force rebuild of the Docker image"
         echo ""
         echo -e "  ${CYAN}0${RESET})  ${DIM}Exit${RESET}"
         echo ""
@@ -230,6 +248,7 @@ main_menu() {
             1) start_menu ;;
             2) stop_menu ;;
             3) show_status ;;
+            4) do_rebuild ;;
             0) echo "" && echo -e "  ${DIM}Goodbye! ☕${RESET}" && echo "" && exit 0 ;;
             *) warn "Invalid option." && sleep 1 ;;
         esac

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Rnd } from 'react-rnd';
-import { Sparkles, X, Send, Settings, Lock, Unlock, Save, Eye, EyeOff, Pin, Trash2, PanelRightClose, PanelLeft, Bot } from 'lucide-react';
+import { Sparkles, X, Send, Settings, Lock, Unlock, Save, Eye, EyeOff, Pin, Trash2, PanelRightClose, PanelLeft } from 'lucide-react';
 import { encryptData, decryptData } from '../utils/crypto';
 import { useAIChat, type AIProvider } from '../context/AIChatContext';
 
