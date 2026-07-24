@@ -109,14 +109,28 @@ async def api_chat(req: ChatRequest):
                 if response.status_code != 200:
                     yield f"data: {{\"error\": \"API Error: {response.text}\"}}\n\n"
                     return
-                for chunk in response.iter_lines():
+                buffer = b""
+                for chunk in response.iter_content(chunk_size=None):
                     if chunk:
-                        yield chunk.decode('utf-8') + "\n\n"
-                        time.sleep(0.03)
+                        buffer += chunk
+                        while b"\n" in buffer:
+                            line, buffer = buffer.split(b"\n", 1)
+                            line = line.strip()
+                            if line:
+                                yield line.decode('utf-8') + "\n\n"
+                                time.sleep(0.03)
         except Exception as e:
             yield f"data: {{\"error\": \"{str(e)}\"}}\n\n"
 
-    return StreamingResponse(stream_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        stream_generator(), 
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 # Serve Frontend static files
 FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "frontend", "dist")

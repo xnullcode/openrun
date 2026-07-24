@@ -653,7 +653,7 @@ export default function AIChat() {
   }
 
   const isMobile = window.innerWidth <= 768;
-  const defaultWidth = isMobile ? window.innerWidth - 20 : 380;
+  const defaultWidth = isMobile ? window.innerWidth - 20 : 480;
   const defaultHeight = isMobile ? window.innerHeight * 0.7 : 550;
   const defaultX = Math.max(10, window.innerWidth - defaultWidth - (isMobile ? 10 : 24));
   const defaultY = Math.max(10, window.innerHeight - defaultHeight - (isMobile ? 10 : 24));
