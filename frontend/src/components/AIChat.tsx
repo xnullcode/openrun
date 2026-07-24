@@ -1,8 +1,56 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Rnd } from 'react-rnd';
-import { Sparkles, X, Send, Settings, Lock, Unlock, Save, Eye, EyeOff, Pin, Trash2, PanelRightClose, PanelLeft } from 'lucide-react';
+import { Sparkles, X, Send, Settings, Lock, Unlock, Save, Eye, EyeOff, Pin, Trash2, PanelRightClose, PanelLeft, ChevronDown, Check } from 'lucide-react';
 import { encryptData, decryptData } from '../utils/crypto';
 import { useAIChat, type AIProvider, PROVIDERS } from '../context/AIChatContext';
+
+function ModelSelector({ provider, model, setModel }: { provider: string, model: string, setModel: (m: string) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const models = Array.from(new Set([...(PROVIDERS[provider]?.models || []), model]));
+  const providerName = PROVIDERS[provider]?.name.split(' ')[0] || 'AI'; // Extract first word like 'Google' or 'Groq'
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-1.5 text-textMain hover:bg-black/5 dark:hover:bg-white/5 rounded-xl px-2 py-1 transition-colors"
+      >
+        <span className="text-[15px] flex items-center gap-1.5">
+          <span className="font-normal opacity-80">{providerName}</span>
+          <span className="font-bold truncate max-w-[150px]">{model}</span>
+        </span>
+        <ChevronDown size={14} className={`text-textMuted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 w-64 bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden z-[100] py-2 flex flex-col max-h-[300px] overflow-y-auto custom-scrollbar">
+          {models.map(m => (
+            <button
+              key={m}
+              onClick={() => { setModel(m); setIsOpen(false); }}
+              className="w-full text-left px-4 py-3 hover:bg-secondary transition-colors flex items-center justify-between group"
+            >
+              <span className="text-sm font-medium text-textMain group-hover:text-primary transition-colors pr-2">{m}</span>
+              {m === model && <Check size={16} className="text-primary shrink-0" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ChatInnerContent({ 
   activeTab, 
@@ -334,19 +382,9 @@ export default function AIChat() {
       <div className="flex flex-col w-full h-full">
         {/* Floating Header */}
         <div className="drag-handle bg-secondary p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-border shrink-0">
-        <div className="flex items-center gap-2 px-2">
-          <Sparkles size={18} className="text-primary shrink-0" />
-          <span className="font-bold text-textMain text-sm shrink-0">AI Assistant</span>
-          <select 
-            value={model} 
-            onChange={(e) => setModel(e.target.value)} 
-            className="ml-2 bg-background border border-border text-xs rounded-md px-1.5 py-0.5 text-textMuted outline-none max-w-[120px] truncate"
-            title="Select AI Model"
-          >
-            {Array.from(new Set([...(PROVIDERS[provider]?.models || []), model])).map(m => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
+        <div className="flex items-center gap-1 px-2">
+          <Sparkles size={18} className="text-primary shrink-0 mr-1" />
+          <ModelSelector provider={provider} model={model} setModel={setModel} />
         </div>
         <div className="flex items-center gap-1 px-1">
           <button 
@@ -388,19 +426,9 @@ export function DockedAIChat() {
   return (
     <div className="h-full flex flex-col bg-background relative border-l border-border z-10 w-full min-w-[300px]">
       <div className="h-12 border-b border-border flex items-center justify-between px-3 bg-surface shrink-0">
-        <div className="flex items-center gap-2">
-          <Sparkles size={16} className="text-primary" />
-          <span className="font-bold text-textMain text-sm shrink-0">AI Assistant</span>
-          <select 
-            value={model} 
-            onChange={(e) => setModel(e.target.value)} 
-            className="ml-2 bg-background border border-border text-xs rounded-md px-1.5 py-0.5 text-textMuted outline-none max-w-[110px] truncate"
-            title="Select AI Model"
-          >
-            {Array.from(new Set([...(PROVIDERS[provider]?.models || []), model])).map(m => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
+        <div className="flex items-center gap-1 px-1">
+          <Sparkles size={16} className="text-primary shrink-0 mr-1" />
+          <ModelSelector provider={provider} model={model} setModel={setModel} />
         </div>
         <div className="flex items-center gap-1">
           <button 
