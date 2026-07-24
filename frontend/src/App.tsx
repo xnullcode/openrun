@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import Editor from '@monaco-editor/react';
 import { Play, Download, Plus, Minus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows, RotateCcw, Sun, Moon, Settings, BookOpen, Sparkles } from 'lucide-react';
 import axios from 'axios';
@@ -464,7 +465,7 @@ function App() {
               {activeTab === 'description' && (
                 <div className="flex-1 p-4 overflow-y-auto custom-scrollbar problem-description text-sm text-textMain">
                   {problemDescription ? (
-                    <div dangerouslySetInnerHTML={{ __html: problemDescription }} />
+                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(problemDescription) }} />
                   ) : (
                     <div className="flex h-full items-center justify-center text-textMuted">
                       <p>Scrape a problem to see its description here.</p>
