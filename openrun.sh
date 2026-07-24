@@ -2,8 +2,6 @@
 
 # Configuration
 PORT=8000
-VENV_DIR="venv"
-FRONTEND_DIR="frontend"
 
 # ─── Colors ──────────────────────────────────────────────────
 BOLD='\033[1m'
@@ -15,6 +13,11 @@ RED='\033[31m'
 RESET='\033[0m'
 
 # ─── Helpers ─────────────────────────────────────────────────
+DOCKER_CMD="docker"
+if ! docker ps &>/dev/null; then
+    DOCKER_CMD="sudo docker"
+fi
+
 banner() {
     clear
     echo -e "${BOLD}${CYAN}"
@@ -36,7 +39,7 @@ press_enter() {
 }
 
 is_server_running() {
-    pgrep -f "uvicorn main:app" &>/dev/null
+    $DOCKER_CMD ps | grep -q "openrun_app"
 }
 
 is_ngrok_running() {
@@ -51,22 +54,22 @@ show_status() {
     echo ""
 
     if is_server_running; then
-        success "Uvicorn Server   ${GREEN}Running${RESET}  →  http://localhost:${PORT}"
+        success "Docker Container ${GREEN}Running${RESET}  →  http://localhost:${PORT}"
     else
-        fail "Uvicorn Server   ${RED}Stopped${RESET}"
+        fail "Docker Container ${RED}Stopped${RESET}"
     fi
 
     if is_ngrok_running; then
         NGROK_URL=$(curl -s http://127.0.0.1:4040/api/tunnels 2>/dev/null | grep -oP '"public_url":"https://[^"]+' | head -1 | cut -d'"' -f4)
         if [[ -n "$NGROK_URL" ]]; then
-            success "Ngrok            ${GREEN}Active${RESET}   →  $NGROK_URL"
+            success "Ngrok Tunnel     ${GREEN}Running${RESET}  →  $NGROK_URL"
         else
-            success "Ngrok            ${GREEN}Active${RESET}   →  check http://127.0.0.1:4040"
+            warn "Ngrok Tunnel     ${YELLOW}Running${RESET}  →  (URL pending)"
         fi
     else
-        echo -e "  ${DIM}○${RESET}  Ngrok            ${DIM}Not running${RESET}"
+        echo -e "  ${DIM}○${RESET}  Ngrok Tunnel     ${DIM}Stopped${RESET}"
     fi
-
+    echo ""
     press_enter
 }
 
@@ -95,25 +98,21 @@ start_menu() {
 do_start() {
     local with_ngrok=$1
     banner
-    echo -e "  ${BOLD}Starting OpenRun...${RESET}"
+    echo -e "  ${BOLD}Starting OpenRun (Docker)...${RESET}"
     divider
     echo ""
 
-    if is_server_running; then
-        success "Server is already running"
-    else
-        if [ ! -d "$VENV_DIR" ]; then
-            fail "Virtual environment not found. Please install dependencies first."
-            press_enter
-            return
-        fi
+    if ! command -v docker &> /dev/null; then
+        fail "Docker is not installed on this system. Please install Docker first."
+        press_enter
+        return
+    fi
 
-        info "Starting backend server on port ${PORT}..."
-        # Prevent "address already in use" errors by clearing the port
-        fuser -k ${PORT}/tcp 2>/dev/null
-        
-        source $VENV_DIR/bin/activate
-        uvicorn main:app --host 0.0.0.0 --port $PORT &>/dev/null &
+    if is_server_running; then
+        success "Docker container is already running."
+    else
+        info "Building and starting Docker container..."
+        $DOCKER_CMD compose up -d --build
         sleep 2
         
         if is_server_running; then
@@ -138,10 +137,8 @@ do_ngrok_only() {
     echo ""
 
     if ! is_server_running; then
-        warn "Server is not running. Starting it first..."
-        fuser -k ${PORT}/tcp 2>/dev/null
-        source $VENV_DIR/bin/activate
-        uvicorn main:app --host 0.0.0.0 --port $PORT &>/dev/null &
+        warn "Docker container is not running. Starting it first..."
+        $DOCKER_CMD compose up -d
         sleep 2
     fi
 
@@ -180,156 +177,28 @@ stop_menu() {
     echo -e "  ${BOLD}Stop Services${RESET}"
     divider
     echo ""
-    echo -e "  ${CYAN}1${RESET})  Stop All           ${DIM}(ngrok + server)${RESET}"
-    echo -e "  ${CYAN}2${RESET})  Stop Ngrok Only    ${DIM}(keep server running locally)${RESET}"
-    echo -e "  ${CYAN}3${RESET})  Stop Server Only   ${DIM}(disconnect localhost:${PORT})${RESET}"
-    echo -e "  ${CYAN}0${RESET})  Back"
-    echo ""
-    read -rp "  Select: " choice
+    info "Stopping services..."
 
-    case $choice in
-        1) do_stop_all ;;
-        2) do_stop_ngrok ;;
-        3) do_stop_server ;;
-        0|"") return ;;
-        *) warn "Invalid option." && sleep 1 ;;
-    esac
-}
-
-do_stop_all() {
-    banner
-    echo -e "  ${BOLD}Stopping Everything...${RESET}"
-    divider
-    echo ""
-
-    do_stop_ngrok_inner
     do_stop_server_inner
-
-    press_enter
-}
-
-do_stop_ngrok() {
-    banner
-    do_stop_ngrok_inner
-    press_enter
-}
-
-do_stop_ngrok_inner() {
+    
     if is_ngrok_running; then
-        pkill -f "ngrok http $PORT" 2>/dev/null
+        pkill -f "ngrok http $PORT" &>/dev/null
         success "Ngrok stopped"
     else
         echo -e "  ${DIM}○${RESET}  Ngrok was not running"
     fi
-}
 
-do_stop_server() {
-    banner
-    do_stop_server_inner
+    echo ""
     press_enter
 }
 
 do_stop_server_inner() {
     if is_server_running; then
-        pkill -f "uvicorn main:app" 2>/dev/null
-        fuser -k ${PORT}/tcp 2>/dev/null
-        success "Server stopped"
+        $DOCKER_CMD compose down
+        success "Docker container stopped"
     else
-        fuser -k ${PORT}/tcp 2>/dev/null
-        echo -e "  ${DIM}○${RESET}  Server was not running"
+        echo -e "  ${DIM}○${RESET}  Docker container was not running"
     fi
-}
-
-# ─── 4. Rebuild Frontend ────────────────────────────────────
-rebuild_frontend() {
-    banner
-    echo -e "  ${BOLD}Rebuild Frontend${RESET}"
-    divider
-    echo ""
-
-    info "Building frontend (this may take a moment)..."
-    echo ""
-
-    cd $FRONTEND_DIR || return
-    npm install
-    npm run build
-    cd ..
-
-    echo ""
-    success "Frontend rebuilt successfully!"
-    press_enter
-}
-
-# ─── 5. Install Dependencies ────────────────────────────────
-install_dependencies() {
-    banner
-    echo -e "  ${BOLD}Install Dependencies (Ubuntu/Debian)${RESET}"
-    divider
-    echo ""
-    info "This will install Python, Node.js, Java (JDK), Ngrok, and Playwright."
-    echo -e "  ${YELLOW}Note: You will be prompted for your sudo password to run apt-get.${RESET}"
-    echo ""
-    read -rp "  Proceed? [y/N]: " confirm
-    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-        return
-    fi
-
-    echo ""
-    info "Updating apt packages..."
-    sudo apt-get update
-
-    echo ""
-    info "Installing Python, pip, OpenJDK, and utilities..."
-    sudo apt-get install -y python3 python3-venv python3-pip openjdk-17-jdk curl wget psmisc
-
-    echo ""
-    info "Setting up Node.js..."
-    if ! command -v node &> /dev/null; then
-        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-        sudo apt-get install -y nodejs
-    else
-        success "Node.js is already installed."
-    fi
-
-    echo ""
-    info "Installing Ngrok..."
-    if ! command -v ngrok &> /dev/null; then
-        curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
-        echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list >/dev/null
-        sudo apt-get update
-        sudo apt-get install -y ngrok
-    else
-        success "Ngrok is already installed."
-    fi
-
-    echo ""
-    info "Setting up Python virtual environment..."
-    if [ ! -d "$VENV_DIR" ]; then
-        python3 -m venv $VENV_DIR
-    fi
-    source $VENV_DIR/bin/activate
-
-    echo ""
-    info "Installing Python packages..."
-    pip install fastapi uvicorn playwright playwright-stealth pydantic
-
-    echo ""
-    info "Installing Playwright browsers and dependencies..."
-    playwright install chromium
-    # playwright install-deps uses sudo internally to install ubuntu packages
-    playwright install-deps
-
-    echo ""
-    info "Installing Frontend dependencies..."
-    if [ -d "$FRONTEND_DIR" ]; then
-        cd $FRONTEND_DIR
-        npm install
-        cd ..
-    fi
-
-    echo ""
-    success "All dependencies installed successfully!"
-    press_enter
 }
 
 # ─── Main Menu ───────────────────────────────────────────────
@@ -343,11 +212,9 @@ main_menu() {
         echo ""
         divider
         echo ""
-        echo -e "  ${CYAN}1${RESET})  ${BOLD}Start${RESET}             Launch the server & ngrok"
+        echo -e "  ${CYAN}1${RESET})  ${BOLD}Start${RESET}             Launch in Docker & ngrok"
         echo -e "  ${CYAN}2${RESET})  ${BOLD}Stop${RESET}              Shut down services"
         echo -e "  ${CYAN}3${RESET})  ${BOLD}Status${RESET}            View detailed status and URLs"
-        echo -e "  ${CYAN}4${RESET})  ${BOLD}Rebuild Frontend${RESET}  Rebuild the React app"
-        echo -e "  ${CYAN}5${RESET})  ${BOLD}Install Setup${RESET}     Install all required dependencies"
         echo ""
         echo -e "  ${CYAN}0${RESET})  ${DIM}Exit${RESET}"
         echo ""
@@ -357,22 +224,16 @@ main_menu() {
             1) start_menu ;;
             2) stop_menu ;;
             3) show_status ;;
-            4) rebuild_frontend ;;
-            5) install_dependencies ;;
             0) echo "" && echo -e "  ${DIM}Goodbye! ☕${RESET}" && echo "" && exit 0 ;;
             *) warn "Invalid option." && sleep 1 ;;
         esac
     done
 }
 
-# ─── Entry Point ─────────────────────────────────────────────
-
 # Warn if running as root
 if [ "$EUID" -eq 0 ]; then
-    warn "It is highly recommended NOT to run this entire script as root."
-    warn "The dependency installer will safely prompt for sudo when needed."
-    echo ""
-    read -rp "  Press Enter to acknowledge and continue..." _
+    warn "It is highly recommended NOT to run this script as root."
+    sleep 2
 fi
 
 main_menu
