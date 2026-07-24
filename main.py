@@ -8,6 +8,7 @@ from scraper import scrape_problem
 import os
 import requests
 import asyncio
+import time
 
 app = FastAPI(title="OpenRun Online Judge")
 
@@ -111,6 +112,7 @@ async def api_chat(req: ChatRequest):
                 for chunk in response.iter_lines():
                     if chunk:
                         yield chunk.decode('utf-8') + "\n\n"
+                        time.sleep(0.03)
         except Exception as e:
             yield f"data: {{\"error\": \"{str(e)}\"}}\n\n"
 

@@ -3,6 +3,39 @@ import { Rnd } from 'react-rnd';
 import { Sparkles, X, Send, Settings, Save, Pin, Trash2, PanelRightClose, PanelLeft, ChevronDown, Check } from 'lucide-react';
 import { useAIChat, type AIProvider, PROVIDERS } from '../context/AIChatContext';
 
+function parseMarkdown(text: string) {
+  if (!text) return null;
+  
+  // Escape HTML to prevent XSS
+  let html = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  // Bold **text**
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Italic *text* or _text_
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  html = html.replace(/_(.*?)_/g, '<em>$1</em>');
+  
+  // Inline Code `code`
+  html = html.replace(/`(.*?)`/g, '<code class="bg-black/10 dark:bg-white/15 px-1.5 py-0.5 rounded font-mono text-[12px]">$1</code>');
+  
+  // Bullet lists
+  html = html.replace(/^(?:\*|-)\s+(.*?)$/gm, '<li class="ml-5 list-disc my-1">$1</li>');
+  
+  // Numbered lists
+  html = html.replace(/^(\d+)\.\s+(.*?)$/gm, '<li class="ml-5 list-decimal my-1">$2</li>');
+
+  // Multi-line code blocks
+  html = html.replace(/```(?:[a-zA-Z0-9_-]+)?\n([\s\S]*?)```/g, '<pre class="bg-black/15 dark:bg-white/5 p-3 rounded-lg font-mono text-xs overflow-x-auto my-2 border border-border/20">$1</pre>');
+
+  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
 function ModelSelector({ provider, model, setModel }: { provider: string, model: string, setModel: (m: string) => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -385,7 +418,7 @@ function ChatInnerContent({
                   return (
                     <div key={idx} className={`${m.role === 'user' ? 'bg-primary text-white dark:text-[#1a2e60] self-end rounded-tr-sm' : 'bg-secondary text-textMain self-start rounded-tl-sm'} rounded-2xl p-4 max-w-[90%] shadow-sm flex items-start gap-3`}>
                       <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans">
-                        {m.content}
+                        {m.role === 'assistant' ? parseMarkdown(m.content) : m.content}
                       </div>
                     </div>
                   );

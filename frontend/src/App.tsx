@@ -258,8 +258,43 @@ function App() {
             : "Wrong Answer")) 
     : "";
 
+  const editorPanelContent = (
+    <div className="w-full h-full flex flex-col bg-background">
+      <div className="h-10 bg-surface border-b border-border flex items-center justify-between px-4 text-sm font-medium text-textMuted shrink-0">
+        <span>Solution.java</span>
+        <div className="flex items-center gap-1.5 bg-secondary px-2 py-1 rounded-md">
+          <button onClick={() => setFontSize(f => Math.max(10, f - 1))} className="hover:text-textMain transition-colors" title="Decrease Font Size">
+            <Minus size={14} />
+          </button>
+          <span className="w-5 text-center text-xs text-textMain select-none">{fontSize}</span>
+          <button onClick={() => setFontSize(f => Math.min(30, f + 1))} className="hover:text-textMain transition-colors" title="Increase Font Size">
+            <Plus size={14} />
+          </button>
+        </div>
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <Editor
+          height="100%"
+          defaultLanguage="java"
+          theme={theme === 'dark' ? 'vs-dark' : 'light'}
+          value={code}
+          onChange={(val: string | undefined) => setCode(val || '')}
+          onMount={handleEditorDidMount}
+          options={{
+            minimap: { enabled: false },
+            fontSize: fontSize,
+            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+            padding: { top: 16 },
+            mouseWheelZoom: true,
+            automaticLayout: true
+          }}
+        />
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col bg-background text-textMain font-sans">
+    <div className="h-[100dvh] w-full flex flex-col bg-background text-textMain overflow-hidden font-sans">
       {/* Header */}
       <header className="py-2 min-h-[56px] border-b border-border bg-surface px-2 md:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3 shadow-md z-50 shrink-0">
         
@@ -379,61 +414,31 @@ function App() {
         </div>
       </header>
 
-      {/* Main Content with Resizable Panels */}
       <div className="flex-1 flex overflow-hidden">
-        <Group 
-          key={`${layoutOrientation}-${showToolsPane}`}
-          orientation={layoutOrientation} 
-          className="w-full h-full"
-        >
-          {/* Editor Panel */}
-          <Panel defaultSize={50} minSize={20} className="flex flex-col bg-background">
-            <div className="h-10 bg-surface border-b border-border flex items-center justify-between px-4 text-sm font-medium text-textMuted shrink-0">
-              <span>Solution.java</span>
-              <div className="flex items-center gap-1.5 bg-secondary px-2 py-1 rounded-md">
-                <button onClick={() => setFontSize(f => Math.max(10, f - 1))} className="hover:text-textMain transition-colors" title="Decrease Font Size">
-                  <Minus size={14} />
-                </button>
-                <span className="w-5 text-center text-xs text-textMain select-none">{fontSize}</span>
-                <button onClick={() => setFontSize(f => Math.min(30, f + 1))} className="hover:text-textMain transition-colors" title="Increase Font Size">
-                  <Plus size={14} />
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <Editor
-                height="100%"
-                defaultLanguage="java"
-                theme={theme === 'dark' ? 'vs-dark' : 'light'}
-                value={code}
-                onChange={(val: string | undefined) => setCode(val || '')}
-                onMount={handleEditorDidMount}
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: fontSize,
-                  fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                  padding: { top: 16 },
-                  mouseWheelZoom: true,
-                  automaticLayout: true
-                }}
-              />
-            </div>
-          </Panel>
+        {showToolsPane ? (
+          <Group 
+            key={`${layoutOrientation}-${showToolsPane}`}
+            orientation={layoutOrientation} 
+            className="w-full h-full"
+          >
+            {/* Editor Panel */}
+            <Panel defaultSize={50} minSize={20} className="flex flex-col bg-background">
+              {editorPanelContent}
+            </Panel>
 
-          {showToolsPane && (
-            <>
-              <Separator 
-                className={`transition-colors flex items-center justify-center group ${
-                  layoutOrientation === "horizontal" 
-                    ? "w-2 h-full bg-surface border-x border-border hover:bg-primary/20 cursor-col-resize active:bg-primary/40" 
-                    : "h-2 w-full bg-surface border-y border-border hover:bg-primary/20 cursor-row-resize active:bg-primary/40"
-                }`}
-              >
-                <div className={`${layoutOrientation === "horizontal" ? "h-8 w-1" : "w-8 h-1"} bg-gray-600 rounded-full group-hover:bg-primary transition-colors`} />
-              </Separator>
+            <Separator 
+              className={`transition-colors flex items-center justify-center group ${
+                layoutOrientation === "horizontal" 
+                  ? "w-2 h-full bg-surface border-x border-border hover:bg-primary/20 cursor-col-resize active:bg-primary/40" 
+                  : "h-2 w-full bg-surface border-y border-border hover:bg-primary/20 cursor-row-resize active:bg-primary/40"
+              }`}
+            >
+              <div className={`${layoutOrientation === "horizontal" ? "h-8 w-1" : "w-8 h-1"} bg-gray-600 rounded-full group-hover:bg-primary transition-colors`} />
+            </Separator>
 
-              {/* Right/Bottom Pane - Test Cases & Results */}
-              <Panel defaultSize={50} minSize={20} className="flex flex-col bg-background">
+            {/* Right/Bottom Pane - Test Cases & Results */}
+            {/* Right/Bottom Pane - Test Cases & Results */}
+            <Panel defaultSize={50} minSize={20} className="flex flex-col bg-background">
             {/* Tabs Header */}
             <div className="h-10 bg-surface border-b border-border flex shrink-0">
               <button 
@@ -608,12 +613,14 @@ function App() {
                   )}
                 </div>
               )}
+              {/* Active Result Content End */}
             </div>
-              </Panel>
-            </>
-          )}
+          </Panel>
         </Group>
-      </div>
+      ) : (
+        editorPanelContent
+      )}
+    </div>
 
       {/* Ask AI Popup */}
       {selectionPopup && (
