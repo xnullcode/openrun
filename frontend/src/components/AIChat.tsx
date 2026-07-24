@@ -75,9 +75,6 @@ function ChatInnerContent({
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim() && attachedSnippets.length === 0) return;
@@ -474,7 +471,7 @@ export default function AIChat() {
         }}
       >
         <button
-          className="w-14 h-14 bg-primary text-white dark:text-[#1a2e60] rounded-full shadow-2xl flex items-center justify-center hover:scale-105 transition-all"
+          className="w-14 h-14 bg-primary text-white dark:text-[#1a2e60] rounded-full shadow-2xl flex items-center justify-center hover:scale-105"
           title="Open AI Assistant"
         >
           <Sparkles size={24} />
@@ -504,8 +501,9 @@ export default function AIChat() {
       dragHandleClassName="drag-handle"
       cancel=".cancel-drag"
       className="z-50 bg-surface border border-border rounded-[24px] shadow-2xl overflow-hidden"
+      style={{ transition: 'none' }}
     >
-      <div className="flex flex-col w-full h-full">
+      <div className="flex flex-col absolute inset-0">
         {/* Floating Header */}
         <div className="drag-handle bg-secondary p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-border shrink-0">
         <div className="flex items-center gap-1 px-2">
