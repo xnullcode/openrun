@@ -123,15 +123,19 @@ function ChatInnerContent({
       
       if (reader) {
         let done = false;
+        let buffer = '';
         while (!done) {
           const { value, done: doneReading } = await reader.read();
           done = doneReading;
           if (value) {
-            const chunkValue = decoder.decode(value, { stream: true });
-            const lines = chunkValue.split('\n');
+            buffer += decoder.decode(value, { stream: !done });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+            
             for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                const dataStr = line.slice(6).trim();
+              const trimmed = line.trim();
+              if (trimmed.startsWith('data: ')) {
+                const dataStr = trimmed.slice(6).trim();
                 if (dataStr === '[DONE]') continue;
                 if (!dataStr) continue;
                 
@@ -151,11 +155,34 @@ function ChatInnerContent({
                     });
                   }
                 } catch (e: any) {
-                  // Ignore JSON parse errors for incomplete chunks, or handle explicit errors
-                  if (e.message && e.message !== 'Unexpected end of JSON input') {
-                    throw e;
-                  }
+                  console.error("JSON parse error:", e, "on line:", trimmed);
                 }
+              }
+            }
+          }
+        }
+        
+        if (buffer.trim()) {
+          const trimmed = buffer.trim();
+          if (trimmed.startsWith('data: ')) {
+            const dataStr = trimmed.slice(6).trim();
+            if (dataStr !== '[DONE]' && dataStr) {
+              try {
+                const data = JSON.parse(dataStr);
+                if (data.error) throw new Error(data.error);
+                const content = data.choices?.[0]?.delta?.content;
+                if (content) {
+                  setMessages(prev => {
+                    const newMsgs = [...prev];
+                    const lastMsg = newMsgs[newMsgs.length - 1];
+                    if (lastMsg.role === 'assistant') {
+                      lastMsg.content += content;
+                    }
+                    return newMsgs;
+                  });
+                }
+              } catch (e) {
+                console.error("JSON parse error on final buffer:", e);
               }
             }
           }
