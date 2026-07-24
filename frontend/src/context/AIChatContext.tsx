@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 export type AIProvider = 'openai' | 'groq' | 'anthropic' | 'gemini' | 'openrouter' | 'cerebras' | 'mistral' | 'huggingface' | 'cloudflare' | 'deepseek' | 'github' | 'nvidia' | 'custom';
 export type AIMode = 'help' | 'code';
 export interface ChatMessage {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system_alert';
   content: string;
 }
 
@@ -47,6 +47,8 @@ interface AIChatContextType {
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
   attachedSnippets: string[];
   setAttachedSnippets: React.Dispatch<React.SetStateAction<string[]>>;
+  problemDescription: any;
+  setProblemDescription: React.Dispatch<React.SetStateAction<any>>;
 
   // Clipboard
   clipboardSnippets: Snippet[];
@@ -159,6 +161,9 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [chatMode, setChatMode] = useState<AIMode>('help');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [attachedSnippets, setAttachedSnippets] = useState<string[]>([]);
+  const [problemDescription, setProblemDescription] = useState<any>(() => {
+    return localStorage.getItem('openrun_desc') || '';
+  });
   const [clipboardSnippets, setClipboardSnippets] = useState<Snippet[]>([]);
   const [editorRef, setEditorRef] = useState<React.MutableRefObject<any> | null>(null);
 
@@ -198,6 +203,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     chatMode, setChatMode,
     messages, setMessages,
     attachedSnippets, setAttachedSnippets,
+    problemDescription, setProblemDescription,
     clipboardSnippets, setClipboardSnippets,
     editorRef, setEditorRef
   };

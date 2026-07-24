@@ -25,7 +25,7 @@ function ModelSelector({ provider, model, setModel }: { provider: string, model:
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 text-textMain hover:bg-black/5 dark:hover:bg-white/5 rounded-xl px-2 py-1 transition-colors"
+        className="flex items-center gap-1.5 text-textMain hover:bg-black/5 dark:hover:bg-white/5 rounded-xl px-2 h-8 transition-colors"
       >
         <span className="text-[15px] flex items-center gap-1.5 overflow-hidden">
           <span className="font-normal opacity-80 shrink-0">{providerName}</span>
@@ -69,7 +69,8 @@ function ChatInnerContent({
     isUnlocked, setIsUnlocked,
     chatMode, setChatMode,
     attachedSnippets, setAttachedSnippets,
-    messages, setMessages
+    messages, setMessages,
+    problemDescription, editorRef
   } = useAIChat();
 
   const [password, setPassword] = useState('');
@@ -110,7 +111,10 @@ function ChatInnerContent({
           baseUrl,
           model,
           apiKey,
-          messages: currentMessages
+          messages: currentMessages,
+          problemDescription,
+          editorCode: editorRef?.current?.getValue(),
+          chatMode
         })
       });
       const data = await res.json();
@@ -326,13 +330,23 @@ function ChatInnerContent({
           <div className="flex justify-center p-2 bg-secondary/30 border-b border-border shrink-0 backdrop-blur-sm z-10 relative">
             <div className="flex items-center gap-1 bg-surface p-1 rounded-full border border-border">
               <button 
-                onClick={() => setChatMode('help')}
+                onClick={() => {
+                  if (chatMode !== 'help') {
+                    setChatMode('help');
+                    setMessages(prev => [...prev, { role: 'system_alert', content: 'Switched to Help Mode' }]);
+                  }
+                }}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${chatMode === 'help' ? 'bg-primary text-white dark:text-[#1a2e60] shadow-sm' : 'text-textMuted hover:text-textMain'}`}
               >
                 Help Mode
               </button>
               <button 
-                onClick={() => setChatMode('code')}
+                onClick={() => {
+                  if (chatMode !== 'code') {
+                    setChatMode('code');
+                    setMessages(prev => [...prev, { role: 'system_alert', content: 'Switched to Code Mode' }]);
+                  }
+                }}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${chatMode === 'code' ? 'bg-primary text-white dark:text-[#1a2e60] shadow-sm' : 'text-textMuted hover:text-textMain'}`}
               >
                 Code Mode
@@ -362,13 +376,25 @@ function ChatInnerContent({
                     Highlight code in the editor to ask me about it!
                   </p>
                 </div>
-                {messages.map((m, idx) => (
-                  <div key={idx} className={`${m.role === 'user' ? 'bg-primary text-white dark:text-[#1a2e60] self-end rounded-tr-sm' : 'bg-secondary text-textMain self-start rounded-tl-sm'} rounded-2xl p-4 max-w-[90%] shadow-sm flex items-start gap-3`}>
-                    <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans">
-                      {m.content}
+                {messages.map((m, idx) => {
+                  if (m.role === 'system_alert') {
+                    return (
+                      <div key={idx} className="flex justify-center my-1">
+                        <span className="text-[11px] font-medium text-textMuted bg-secondary/50 px-3 py-1 rounded-full border border-border/50">
+                          {m.content}
+                        </span>
+                      </div>
+                    );
+                  }
+                  
+                  return (
+                    <div key={idx} className={`${m.role === 'user' ? 'bg-primary text-white dark:text-[#1a2e60] self-end rounded-tr-sm' : 'bg-secondary text-textMain self-start rounded-tl-sm'} rounded-2xl p-4 max-w-[90%] shadow-sm flex items-start gap-3`}>
+                      <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans">
+                        {m.content}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {isSending && (
                   <div className="bg-secondary self-start rounded-2xl rounded-tl-sm p-4 max-w-[90%] shadow-sm flex items-center gap-2">
                     <div className="w-2 h-2 bg-textMuted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />

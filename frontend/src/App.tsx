@@ -44,7 +44,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<'description' | 'tests' | 'results' | 'ai'>('description');
   const [activeCaseIndex, setActiveCaseIndex] = useState(0);
   
-  const { isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets } = useAIChat();
+  const { isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, problemDescription, setProblemDescription } = useAIChat();
   const editorRef = useRef<any>(null);
 
   const [selectionPopup, setSelectionPopup] = useState<{ x: number, y: number, text: string } | null>(null);
@@ -97,7 +97,6 @@ function App() {
     }
   }, [isDocked, isAIEnabled]);
   const [scrapeUrl, setScrapeUrl] = useState('');
-  const [problemDescription, setProblemDescription] = useState(() => localStorage.getItem('openrun_desc') || '');
   const [isLoading, setIsLoading] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
   

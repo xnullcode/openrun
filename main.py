@@ -30,6 +30,9 @@ class ChatRequest(BaseModel):
     model: str
     apiKey: str
     messages: List[ChatMessage]
+    problemDescription: Optional[str] = None
+    editorCode: Optional[str] = None
+    chatMode: Optional[str] = "help"
 
 @app.post("/api/execute")
 async def api_execute(req: ExecuteRequest):
@@ -67,11 +70,35 @@ async def api_chat(req: ChatRequest):
             "Content-Type": "application/json"
         }
         
-        # Anthropic uses a slightly different format, but since we rely on openAI compatibility:
-        # Gemini provides OpenAI compatible endpoint /v1beta/openai/chat/completions
+        # Load system prompt
+        system_prompt = ""
+        prompt_path = os.path.join(os.path.dirname(__file__), "ai_coding_assistant_system_prompt.md")
+        if os.path.exists(prompt_path):
+            with open(prompt_path, "r", encoding="utf-8") as f:
+                system_prompt = f.read()
+
+        # Build dynamic context
+        context_str = f"\n\n--- DYNAMIC CONTEXT ---\nUSER IS CURRENTLY IN: {req.chatMode.upper()} MODE\n"
+        
+        if req.problemDescription:
+            context_str += f"\nPROBLEM DESCRIPTION:\n{req.problemDescription}\n"
+            
+        if req.editorCode:
+            context_str += f"\nCURRENT EDITOR CODE:\n```java\n{req.editorCode}\n```\n"
+
+        final_system_prompt = system_prompt + context_str
+
+        # Filter out frontend-only messages like system_alert
+        api_messages = []
+        api_messages.append({"role": "system", "content": final_system_prompt})
+        
+        for m in req.messages:
+            if m.role in ["user", "assistant"]:
+                api_messages.append({"role": m.role, "content": m.content})
+        
         payload = {
             "model": req.model,
-            "messages": [{"role": m.role, "content": m.content} for m in req.messages]
+            "messages": api_messages
         }
         
         # We don't want it to hang forever
