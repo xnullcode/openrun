@@ -84,18 +84,6 @@ function ChatInnerContent({
     setAttachedSnippets(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleAttachSelection = () => {
-    if (editorRef?.current) {
-      const selection = editorRef.current.getSelection();
-      if (selection && !selection.isEmpty()) {
-        const text = editorRef.current.getModel()?.getValueInRange(selection);
-        if (text) {
-          setAttachedSnippets(prev => [...prev, text]);
-        }
-      }
-    }
-  };
-
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-background relative">
       {activeTab === 'settings' && (
@@ -325,7 +313,7 @@ function ChatInnerContent({
 // The main floating component
 export default function AIChat() {
   const [activeTab, setActiveTab] = useState<'chat' | 'clipboard' | 'settings'>('chat');
-  const { isDocked, setIsDocked, isChatOpen, setIsChatOpen } = useAIChat();
+  const { isDocked, setIsDocked, isChatOpen, setIsChatOpen, provider, model, setModel } = useAIChat();
 
   const isDraggingRef = useRef(false);
   const [fabPosition, setFabPosition] = useState({ 
@@ -445,7 +433,7 @@ export default function AIChat() {
 // The docked component (rendered by App.tsx)
 export function DockedAIChat() {
   const [activeTab, setActiveTab] = useState<'chat' | 'clipboard' | 'settings'>('chat');
-  const { setIsDocked } = useAIChat();
+  const { setIsDocked, provider, model, setModel } = useAIChat();
   
   return (
     <div className="h-full flex flex-col bg-background relative border-l border-border z-10 w-full min-w-[300px]">
