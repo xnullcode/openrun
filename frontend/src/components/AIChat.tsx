@@ -26,9 +26,9 @@ function ModelSelector({ provider, model, setModel }: { provider: string, model:
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-1 text-textMain hover:bg-black/5 dark:hover:bg-white/5 rounded-xl px-2 h-8 transition-colors max-w-full overflow-hidden"
       >
-        <div className="text-[14px] flex items-center gap-1 overflow-hidden whitespace-nowrap flex-nowrap shrink">
-          <span className="font-normal opacity-80 shrink-0 mt-[1px]">{providerName}</span>
-          <span className="font-bold mt-[1px]" title={model}>
+        <div className="text-[14px] leading-none flex items-center gap-1 overflow-hidden whitespace-nowrap flex-nowrap shrink">
+          <span className="font-normal opacity-80 shrink-0">{providerName}</span>
+          <span className="font-bold" title={model}>
             {model.length > 14 ? model.substring(0, 14) + '...' : model}
           </span>
         </div>
