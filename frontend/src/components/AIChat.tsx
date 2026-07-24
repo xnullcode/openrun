@@ -27,9 +27,11 @@ function ModelSelector({ provider, model, setModel }: { provider: string, model:
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-1.5 text-textMain hover:bg-black/5 dark:hover:bg-white/5 rounded-xl px-2 py-1 transition-colors"
       >
-        <span className="text-[15px] flex items-center gap-1.5">
-          <span className="font-normal opacity-80">{providerName}</span>
-          <span className="font-bold truncate max-w-[150px]">{model}</span>
+        <span className="text-[15px] flex items-center gap-1.5 overflow-hidden">
+          <span className="font-normal opacity-80 shrink-0">{providerName}</span>
+          <span className="font-bold truncate max-w-[120px]" title={model}>
+            {model.length > 16 ? model.substring(0, 16) + '...' : model}
+          </span>
         </span>
         <ChevronDown size={14} className={`text-textMuted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
