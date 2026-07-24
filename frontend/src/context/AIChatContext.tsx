@@ -81,10 +81,17 @@ export const PROVIDERS: Record<string, { name: string; defaultBaseUrl: string; d
     models: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro']
   },
   openrouter: {
-    name: 'OpenRouter',
+    name: 'OpenRouter (Free Tier)',
     defaultBaseUrl: 'https://openrouter.ai/api/v1',
-    defaultModel: 'meta-llama/llama-3.1-70b-instruct',
-    models: ['meta-llama/llama-3.1-70b-instruct', 'meta-llama/llama-3.1-8b-instruct', 'anthropic/claude-3.5-sonnet', 'google/gemini-1.5-pro', 'openai/gpt-4o']
+    defaultModel: 'meta-llama/llama-3.1-8b-instruct:free',
+    models: [
+      'meta-llama/llama-3.1-8b-instruct:free', 
+      'google/gemini-pro:free', 
+      'mistralai/mistral-7b-instruct:free',
+      'meta-llama/llama-3.1-70b-instruct',
+      'anthropic/claude-3.5-sonnet', 
+      'openai/gpt-4o'
+    ]
   },
   custom: { 
     name: 'Custom', 
