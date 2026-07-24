@@ -24,7 +24,7 @@ function ModelSelector({ provider, model, setModel }: { provider: string, model:
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 text-textMain hover:bg-black/5 dark:hover:bg-white/5 rounded-xl px-2 h-8 transition-colors max-w-full overflow-hidden"
+        className="cancel-drag flex items-center gap-1 text-textMain hover:bg-black/5 dark:hover:bg-white/5 rounded-xl px-2 h-8 transition-colors max-w-full overflow-hidden"
       >
         <div className="text-[14px] leading-none flex items-center gap-1 overflow-hidden whitespace-nowrap flex-nowrap shrink">
           <span className="font-normal opacity-80 shrink-0">{providerName}</span>
@@ -485,7 +485,7 @@ export default function AIChat() {
 
   const isMobile = window.innerWidth <= 768;
   const defaultWidth = isMobile ? window.innerWidth - 20 : 380;
-  const defaultHeight = isMobile ? window.innerHeight - 40 : 550;
+  const defaultHeight = isMobile ? window.innerHeight * 0.7 : 550;
   const defaultX = Math.max(10, window.innerWidth - defaultWidth - (isMobile ? 10 : 24));
   const defaultY = Math.max(10, window.innerHeight - defaultHeight - (isMobile ? 10 : 24));
 
@@ -502,6 +502,7 @@ export default function AIChat() {
       minHeight={400}
       bounds="window"
       dragHandleClassName="drag-handle"
+      cancel=".cancel-drag"
       className="z-50 bg-surface border border-border rounded-[24px] shadow-2xl overflow-hidden"
     >
       <div className="flex flex-col w-full h-full">
@@ -514,21 +515,21 @@ export default function AIChat() {
         <div className="flex items-center gap-1 px-1">
           <button 
             onClick={() => setIsDocked(true)}
-            className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+            className="cancel-drag p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
             title="Dock to Tabs"
           >
             <PanelLeft size={16} className="text-textMuted" />
           </button>
           <button 
             onClick={() => setActiveTab(t => t === 'settings' ? 'chat' : 'settings')}
-            className={`p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors ${activeTab === 'settings' ? 'bg-black/10 dark:bg-white/10' : ''}`}
+            className={`cancel-drag p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors ${activeTab === 'settings' ? 'bg-black/10 dark:bg-white/10' : ''}`}
             title="Settings"
           >
             <Settings size={16} className="text-textMuted" />
           </button>
           <button 
             onClick={() => setIsChatOpen(false)}
-            className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 hover:text-red-500 dark:hover:text-red-500 transition-colors"
+            className="cancel-drag p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 hover:text-red-500 dark:hover:text-red-500 transition-colors"
             title="Close to FAB"
           >
             <X size={16} className="text-textMuted group-hover:text-red-500" />

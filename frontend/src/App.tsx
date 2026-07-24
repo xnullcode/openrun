@@ -261,17 +261,17 @@ function App() {
   return (
     <div className="h-screen w-screen flex flex-col bg-background text-textMain overflow-hidden font-sans">
       {/* Header */}
-      <header className="py-2 min-h-[56px] border-b border-border bg-surface px-3 md:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3 shadow-md z-50 shrink-0">
+      <header className="py-2 min-h-[56px] border-b border-border bg-surface px-2 md:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3 shadow-md z-50 shrink-0">
         
         {/* Left side: Logo */}
         <div className="flex items-center gap-2 md:gap-3 shrink-0">
           <div className="bg-primary p-1.5 rounded-lg text-surface dark:text-[#1a2e60]">
             <Cpu size={18} />
           </div>
-          <h1 className="text-lg font-bold tracking-tight text-textMain">OpenRun</h1>
+          <h1 className="text-lg font-bold tracking-tight text-textMain hidden min-[414px]:block">OpenRun</h1>
         </div>
 
-        {/* Center: URL Input (Drops to second line on mobile) */}
+        {/* Center: URL Input */}
         <div className="flex items-center w-full md:w-auto md:flex-1 md:max-w-lg md:mx-6 order-last md:order-none shrink-0 md:shrink">
           <div className="flex-1 flex gap-1 bg-secondary border border-border p-1 rounded-lg">
             <input 
@@ -317,7 +317,7 @@ function App() {
             {isSettingsOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsSettingsOpen(false)}></div>
-                <div className="absolute right-0 top-full mt-2 w-[320px] bg-[#1c1d21] rounded-[24px] p-4 shadow-2xl z-50 border border-white/5">
+                <div className="fixed sm:absolute top-[70px] sm:top-full left-1/2 sm:left-auto right-auto sm:right-0 -translate-x-1/2 sm:translate-x-0 sm:mt-2 w-[95vw] sm:w-[320px] max-w-[350px] bg-[#1c1d21] rounded-[24px] p-4 shadow-2xl z-50 border border-white/5">
                   <div className="grid grid-cols-2 gap-3">
                     {/* Theme Toggle */}
                     <button 

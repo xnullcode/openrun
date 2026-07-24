@@ -189,17 +189,17 @@ export default function Timer() {
       )}
 
       {showPopover && (
-        <div className="absolute top-12 right-0 bg-surface border border-border rounded-xl shadow-xl p-3 z-50 animate-in fade-in zoom-in-95 duration-100 min-w-[280px]">
+        <div className="fixed sm:absolute top-[70px] sm:top-12 left-1/2 sm:left-auto right-auto sm:right-0 -translate-x-1/2 sm:translate-x-0 bg-surface border border-border rounded-xl shadow-xl p-3 z-50 animate-in fade-in zoom-in-95 duration-100 w-[95vw] max-w-[350px] sm:w-auto sm:min-w-[280px]">
           <div className="flex gap-2 mb-3 h-[120px]">
             {mode === 'stopwatch' ? (
               <>
                 <button className="flex-1 flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-blue-500 bg-blue-500/10 transition-colors h-full">
                   <TimerIcon size={24} className="text-blue-500" />
-                  <span className="text-xs font-medium text-white">Stopwatch</span>
+                  <span className="text-xs font-medium text-blue-700 dark:text-blue-300">Stopwatch</span>
                 </button>
                 <button onClick={() => setMode('timer')} className="flex-1 flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-border hover:bg-secondary transition-colors h-full">
-                  <Clock size={24} className="text-orange-500" />
-                  <span className="text-xs font-medium text-gray-400">Timer</span>
+                  <Clock size={24} className="text-textMuted" />
+                  <span className="text-xs font-medium text-textMuted">Timer</span>
                 </button>
               </>
             ) : (
@@ -215,20 +215,20 @@ export default function Timer() {
                         type="text" 
                         value={timerHours} 
                         onChange={handleHourChange} 
-                        className="w-11 h-9 bg-transparent border border-border rounded-lg text-center text-white text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
+                        className="w-11 h-9 bg-transparent border border-border rounded-lg text-center text-textMain text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
                         onBlur={() => setTimerHours(prev => (prev || '0').padStart(2, '0'))}
                       />
-                      <span className="text-xs text-gray-400">hr</span>
+                      <span className="text-xs text-textMuted">hr</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <input 
                         type="text" 
                         value={timerMinutes} 
                         onChange={handleMinuteChange} 
-                        className="w-11 h-9 bg-transparent border border-border rounded-lg text-center text-white text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
+                        className="w-11 h-9 bg-transparent border border-border rounded-lg text-center text-textMain text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
                         onBlur={() => setTimerMinutes(prev => (prev || '0').padStart(2, '0'))}
                       />
-                      <span className="text-xs text-gray-400">min</span>
+                      <span className="text-xs text-textMuted">min</span>
                     </div>
                   </div>
                 </div>
