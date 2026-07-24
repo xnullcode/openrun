@@ -269,7 +269,7 @@ function App() {
                     {/* Theme Toggle */}
                     <button 
                       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors ${theme === 'dark' ? 'bg-primary text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
+                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors ${theme === 'dark' ? 'bg-primary text-white dark:text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
                     >
                       <div className="mb-2">{theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}</div>
                       <span className="font-medium text-sm">Theme</span>
@@ -279,7 +279,7 @@ function App() {
                     {/* Layout Toggle */}
                     <button 
                       onClick={() => setLayoutOrientation(layoutOrientation === 'horizontal' ? 'vertical' : 'horizontal')}
-                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors ${layoutOrientation === 'vertical' ? 'bg-primary text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
+                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors ${layoutOrientation === 'vertical' ? 'bg-primary text-white dark:text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
                     >
                       <div className="mb-2">{layoutOrientation === 'horizontal' ? <Columns size={20} /> : <Rows size={20} />}</div>
                       <span className="font-medium text-sm">Layout</span>
@@ -289,7 +289,7 @@ function App() {
                     {/* Tools Pane Toggle */}
                     <button 
                       onClick={() => setShowToolsPane(!showToolsPane)}
-                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors col-span-2 ${showToolsPane ? 'bg-primary text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
+                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors col-span-2 ${showToolsPane ? 'bg-primary text-white dark:text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
                     >
                       <div className="mb-2"><BookOpen size={20} /></div>
                       <span className="font-medium text-sm">Tools Pane</span>
