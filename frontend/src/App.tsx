@@ -381,7 +381,11 @@ function App() {
 
       {/* Main Content with Resizable Panels */}
       <div className="flex-1 flex overflow-hidden">
-        <Group orientation={layoutOrientation} className="w-full h-full">
+        <Group 
+          key={`${layoutOrientation}-${showToolsPane}`}
+          orientation={layoutOrientation} 
+          className="w-full h-full"
+        >
           {/* Editor Panel */}
           <Panel defaultSize={50} minSize={20} className="flex flex-col bg-background">
             <div className="h-10 bg-surface border-b border-border flex items-center justify-between px-4 text-sm font-medium text-textMuted shrink-0">
@@ -409,7 +413,8 @@ function App() {
                   fontSize: fontSize,
                   fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
                   padding: { top: 16 },
-                  mouseWheelZoom: true
+                  mouseWheelZoom: true,
+                  automaticLayout: true
                 }}
               />
             </div>
