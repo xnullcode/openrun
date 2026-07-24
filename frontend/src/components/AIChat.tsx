@@ -455,7 +455,8 @@ function ChatInnerContent({
       {activeTab === 'chat' && (
         <div className="flex-1 flex flex-col overflow-hidden relative">
           {/* Mode Toggle Header */}
-          <div className="flex justify-center p-2 bg-secondary/30 border-b border-border shrink-0 backdrop-blur-sm z-10 relative">
+          <div className="flex items-center justify-between p-2 bg-secondary/30 border-b border-border shrink-0 backdrop-blur-sm z-10 relative">
+            <div className="flex-1" />
             <div className="flex items-center gap-1 bg-surface p-1 rounded-full border border-border">
               <button 
                 onClick={() => {
@@ -494,6 +495,15 @@ function ChatInnerContent({
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${chatMode === 'code' ? 'bg-primary text-white dark:text-[#1a2e60] shadow-sm' : 'text-textMuted hover:text-textMain'}`}
               >
                 Code Mode
+              </button>
+            </div>
+            <div className="flex-1 flex justify-end">
+              <button
+                onClick={() => setMessages([])}
+                className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 text-textMuted hover:text-red-500 transition-colors"
+                title="Clear chat history"
+              >
+                <Trash2 size={14} />
               </button>
             </div>
           </div>
