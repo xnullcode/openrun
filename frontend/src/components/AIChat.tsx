@@ -117,13 +117,68 @@ function ChatInnerContent({
           chatMode
         })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || data.error || 'Failed to send message');
       
-      const assistantMsg = data.choices[0].message;
-      setMessages(prev => [...prev, { role: 'assistant', content: assistantMsg.content }]);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.detail || data.error || 'Failed to send message');
+      }
+
+      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+      setIsSending(false); // Disable bouncing dots as soon as stream starts
+      
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder('utf-8');
+      
+      if (reader) {
+        let done = false;
+        while (!done) {
+          const { value, done: doneReading } = await reader.read();
+          done = doneReading;
+          if (value) {
+            const chunkValue = decoder.decode(value, { stream: true });
+            const lines = chunkValue.split('\n');
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const dataStr = line.slice(6).trim();
+                if (dataStr === '[DONE]') continue;
+                if (!dataStr) continue;
+                
+                try {
+                  const data = JSON.parse(dataStr);
+                  if (data.error) throw new Error(data.error);
+                  
+                  const content = data.choices?.[0]?.delta?.content;
+                  if (content) {
+                    setMessages(prev => {
+                      const newMsgs = [...prev];
+                      const lastMsg = newMsgs[newMsgs.length - 1];
+                      if (lastMsg.role === 'assistant') {
+                        lastMsg.content += content;
+                      }
+                      return newMsgs;
+                    });
+                  }
+                } catch (e: any) {
+                  // Ignore JSON parse errors for incomplete chunks, or handle explicit errors
+                  if (e.message && e.message !== 'Unexpected end of JSON input') {
+                    throw e;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     } catch (e: any) {
-      setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${e.message}` }]);
+      setMessages(prev => {
+        // If we already started an assistant message, append the error
+        if (prev[prev.length - 1].role === 'assistant' && prev[prev.length - 1].content === '') {
+          const newMsgs = [...prev];
+          newMsgs[newMsgs.length - 1].content = `Error: ${e.message}`;
+          return newMsgs;
+        }
+        return [...prev, { role: 'assistant', content: `Error: ${e.message}` }];
+      });
     } finally {
       setIsSending(false);
     }

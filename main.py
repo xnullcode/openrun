@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
@@ -59,7 +60,7 @@ async def api_scrape(req: ScrapeRequest):
 
 @app.post("/api/chat")
 async def api_chat(req: ChatRequest):
-    def make_request():
+    def stream_generator():
         url = req.baseUrl
         # If it doesn't end with chat/completions, append it.
         if not url.endswith("/chat/completions"):
@@ -98,24 +99,22 @@ async def api_chat(req: ChatRequest):
         
         payload = {
             "model": req.model,
-            "messages": api_messages
+            "messages": api_messages,
+            "stream": True
         }
         
-        # We don't want it to hang forever
-        response = requests.post(url, json=payload, headers=headers, timeout=60)
-        
-        if response.status_code != 200:
-            return {"error": f"API Error: {response.text}"}
-            
-        return response.json()
-        
-    try:
-        data = await asyncio.to_thread(make_request)
-        if "error" in data:
-            raise HTTPException(status_code=400, detail=data["error"])
-        return data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        try:
+            with requests.post(url, json=payload, headers=headers, timeout=60, stream=True) as response:
+                if response.status_code != 200:
+                    yield f"data: {{\"error\": \"API Error: {response.text}\"}}\n\n"
+                    return
+                for chunk in response.iter_lines():
+                    if chunk:
+                        yield chunk.decode('utf-8') + "\n\n"
+        except Exception as e:
+            yield f"data: {{\"error\": \"{str(e)}\"}}\n\n"
+
+    return StreamingResponse(stream_generator(), media_type="text/event-stream")
 
 # Serve Frontend static files
 FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "frontend", "dist")

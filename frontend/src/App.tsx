@@ -614,7 +614,7 @@ function App() {
       {selectionPopup && (
         <div 
           className="fixed z-[100] transform -translate-x-1/2 -translate-y-full"
-          style={{ left: selectionPopup.x, top: selectionPopup.y - 10 }}
+          style={{ left: Math.max(80, Math.min(window.innerWidth - 80, selectionPopup.x)), top: selectionPopup.y - 10 }}
         >
           <button
             onClick={handleAskAI}
