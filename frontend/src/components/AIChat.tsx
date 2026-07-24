@@ -68,12 +68,62 @@ function ChatInnerContent({
     apiKey, setApiKey,
     isUnlocked, setIsUnlocked,
     chatMode, setChatMode,
-    attachedSnippets, setAttachedSnippets
+    attachedSnippets, setAttachedSnippets,
+    messages, setMessages
   } = useAIChat();
 
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() && attachedSnippets.length === 0) return;
+    if (!apiKey) {
+      setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Please configure your API key in Settings first.' }]);
+      return;
+    }
+    
+    let content = inputMessage;
+    if (attachedSnippets.length > 0) {
+      content += "\n\nAttached Code:\n" + attachedSnippets.map(s => "```\n" + s + "\n```").join("\n");
+      setAttachedSnippets([]);
+    }
+    
+    const newUserMsg = { role: 'user' as const, content };
+    const currentMessages = [...messages, newUserMsg];
+    setMessages(currentMessages);
+    setInputMessage('');
+    setIsSending(true);
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          baseUrl,
+          model,
+          apiKey,
+          messages: currentMessages
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || data.error || 'Failed to send message');
+      
+      const assistantMsg = data.choices[0].message;
+      setMessages(prev => [...prev, { role: 'assistant', content: assistantMsg.content }]);
+    } catch (e: any) {
+      setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${e.message}` }]);
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const handleProviderChange = (p: AIProvider) => {
     setProvider(p);
@@ -312,6 +362,21 @@ function ChatInnerContent({
                     Highlight code in the editor to ask me about it!
                   </p>
                 </div>
+                {messages.map((m, idx) => (
+                  <div key={idx} className={`${m.role === 'user' ? 'bg-primary text-white dark:text-[#1a2e60] self-end rounded-tr-sm' : 'bg-secondary text-textMain self-start rounded-tl-sm'} rounded-2xl p-4 max-w-[90%] shadow-sm flex items-start gap-3`}>
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans">
+                      {m.content}
+                    </div>
+                  </div>
+                ))}
+                {isSending && (
+                  <div className="bg-secondary self-start rounded-2xl rounded-tl-sm p-4 max-w-[90%] shadow-sm flex items-center gap-2">
+                    <div className="w-2 h-2 bg-textMuted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 bg-textMuted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 bg-textMuted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
               </div>
 
               {/* Input Area */}
@@ -337,9 +402,16 @@ function ChatInnerContent({
                     <input 
                       type="text" 
                       placeholder="Ask anything"
+                      value={inputMessage}
+                      onChange={e => setInputMessage(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
                       className="flex-1 bg-transparent border-none focus:outline-none text-sm text-textMain placeholder-textMuted/70 py-1"
                     />
-                    <button className="w-8 h-8 rounded-full bg-primary text-white dark:text-[#1a2e60] flex items-center justify-center hover:scale-105 transition-transform shadow-md">
+                    <button 
+                      onClick={handleSendMessage}
+                      disabled={isSending}
+                      className="w-8 h-8 rounded-full bg-primary text-white dark:text-[#1a2e60] flex items-center justify-center hover:scale-105 transition-transform shadow-md disabled:opacity-50"
+                    >
                       <Send size={14} className="ml-[-2px]" />
                     </button>
                   </div>

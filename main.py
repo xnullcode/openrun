@@ -5,6 +5,8 @@ from typing import List, Dict, Any, Optional
 from executor import execute_java_code
 from scraper import scrape_problem
 import os
+import requests
+import asyncio
 
 app = FastAPI(title="OpenRun Online Judge")
 
@@ -18,6 +20,16 @@ class ExecuteRequest(BaseModel):
 
 class ScrapeRequest(BaseModel):
     url: str
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    baseUrl: str
+    model: str
+    apiKey: str
+    messages: List[ChatMessage]
 
 @app.post("/api/execute")
 async def api_execute(req: ExecuteRequest):
@@ -41,6 +53,42 @@ async def api_scrape(req: ScrapeRequest):
     except Exception as e:
         print(f"Unhandled exception during scrape: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+@app.post("/api/chat")
+async def api_chat(req: ChatRequest):
+    def make_request():
+        url = req.baseUrl
+        # If it doesn't end with chat/completions, append it.
+        if not url.endswith("/chat/completions"):
+            url = url.rstrip("/") + "/chat/completions"
+            
+        headers = {
+            "Authorization": f"Bearer {req.apiKey}",
+            "Content-Type": "application/json"
+        }
+        
+        # Anthropic uses a slightly different format, but since we rely on openAI compatibility:
+        # Gemini provides OpenAI compatible endpoint /v1beta/openai/chat/completions
+        payload = {
+            "model": req.model,
+            "messages": [{"role": m.role, "content": m.content} for m in req.messages]
+        }
+        
+        # We don't want it to hang forever
+        response = requests.post(url, json=payload, headers=headers, timeout=60)
+        
+        if response.status_code != 200:
+            return {"error": f"API Error: {response.text}"}
+            
+        return response.json()
+        
+    try:
+        data = await asyncio.to_thread(make_request)
+        if "error" in data:
+            raise HTTPException(status_code=400, detail=data["error"])
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Serve Frontend static files
 FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "frontend", "dist")
