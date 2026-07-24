@@ -1,39 +1,141 @@
 import { useState, useRef, useEffect } from 'react';
 import { Rnd } from 'react-rnd';
-import { Sparkles, X, Send, Settings, Save, Pin, Trash2, PanelRightClose, PanelLeft, ChevronDown, Check } from 'lucide-react';
+import { Sparkles, X, Send, Settings, Save, Pin, Trash2, PanelRightClose, PanelLeft, ChevronDown, Check, Copy, ClipboardPaste } from 'lucide-react';
 import { useAIChat, type AIProvider, PROVIDERS } from '../context/AIChatContext';
 
-function parseMarkdown(text: string) {
-  if (!text) return null;
+// Java syntax highlighting keywords
+const JAVA_KEYWORDS = new Set([
+  'abstract','assert','boolean','break','byte','case','catch','char','class','const',
+  'continue','default','do','double','else','enum','extends','final','finally','float',
+  'for','goto','if','implements','import','instanceof','int','interface','long','native',
+  'new','package','private','protected','public','return','short','static','strictfp',
+  'super','switch','synchronized','this','throw','throws','transient','try','void',
+  'volatile','while','true','false','null','var','String','System','Scanner','Arrays',
+  'List','Map','Set','ArrayList','HashMap','HashSet','LinkedList','Collections','Math'
+]);
+
+function highlightJava(code: string) {
+  // Tokenize and highlight Java code
+  const escaped = code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  let result = escaped
+    // Strings
+    .replace(/(&#039;[^&#]*?&#039;|&quot;[^&]*?&quot;|"[^"]*?")/g, '<span class="text-green-400">$1</span>')
+    // Single-line comments
+    .replace(/(\/\/.*?)$/gm, '<span class="text-gray-500 italic">$1</span>')
+    // Numbers
+    .replace(/\b(\d+\.?\d*[fFdDlL]?)\b/g, '<span class="text-orange-300">$1</span>');
   
-  // Escape HTML to prevent XSS
+  // Keywords
+  JAVA_KEYWORDS.forEach(kw => {
+    result = result.replace(
+      new RegExp(`\\b(${kw})\\b`, 'g'),
+      (match) => {
+        if (['true','false','null'].includes(match)) return `<span class="text-orange-300">${match}</span>`;
+        if (['String','System','Scanner','Arrays','List','Map','Set','ArrayList','HashMap','HashSet','LinkedList','Collections','Math'].includes(match))
+          return `<span class="text-cyan-300">${match}</span>`;
+        return `<span class="text-purple-400">${match}</span>`;
+      }
+    );
+  });
+  
+  return result;
+}
+
+function CodeBlock({ code, language, editorRef }: { code: string; language: string; editorRef: React.MutableRefObject<any> | null }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleApply = () => {
+    if (editorRef?.current) {
+      editorRef.current.setValue(code);
+    }
+  };
+
+  const isJava = !language || language === 'java' || language === 'Java';
+  const highlighted = isJava ? highlightJava(code) : code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  return (
+    <div className="my-2 rounded-lg overflow-hidden border border-white/10 bg-[#1e1e2e]">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-[#2b2d3a] border-b border-white/5">
+        <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">{language || 'java'}</span>
+        <div className="flex items-center gap-1">
+          <button onClick={handleCopy} className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-white px-2 py-0.5 rounded hover:bg-white/10 transition-colors">
+            {copied ? <Check size={10} /> : <Copy size={10} />}
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+          {editorRef && (
+            <button onClick={handleApply} className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-white px-2 py-0.5 rounded hover:bg-white/10 transition-colors">
+              <ClipboardPaste size={10} />
+              Apply to editor
+            </button>
+          )}
+        </div>
+      </div>
+      <pre className="p-3 overflow-x-auto text-[12px] leading-5 font-mono">
+        <code dangerouslySetInnerHTML={{ __html: highlighted }} />
+      </pre>
+    </div>
+  );
+}
+
+function MarkdownRenderer({ text, editorRef }: { text: string; editorRef: React.MutableRefObject<any> | null }) {
+  if (!text) return null;
+
+  // Split text by code blocks first
+  const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = codeBlockRegex.exec(text)) !== null) {
+    // Add text before this code block
+    if (match.index > lastIndex) {
+      parts.push(<InlineMarkdown key={`text-${lastIndex}`} text={text.slice(lastIndex, match.index)} />);
+    }
+    // Add code block
+    parts.push(<CodeBlock key={`code-${match.index}`} language={match[1]} code={match[2].trim()} editorRef={editorRef} />);
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(<InlineMarkdown key={`text-${lastIndex}`} text={text.slice(lastIndex)} />);
+  }
+
+  return <>{parts}</>;
+}
+
+function InlineMarkdown({ text }: { text: string }) {
+  // Escape HTML
   let html = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 
   // Bold **text**
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  
-  // Italic *text* or _text_
+  // Italic *text*
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  html = html.replace(/_(.*?)_/g, '<em>$1</em>');
-  
-  // Inline Code `code`
+  // Inline code `code`
   html = html.replace(/`(.*?)`/g, '<code class="bg-black/10 dark:bg-white/15 px-1.5 py-0.5 rounded font-mono text-[12px]">$1</code>');
-  
   // Bullet lists
-  html = html.replace(/^(?:\*|-)\s+(.*?)$/gm, '<li class="ml-5 list-disc my-1">$1</li>');
-  
+  html = html.replace(/^(?:\*|-)(?!\*)(?!\*)\s+(.*?)$/gm, '<li class="ml-5 list-disc my-0.5">$1</li>');
   // Numbered lists
-  html = html.replace(/^(\d+)\.\s+(.*?)$/gm, '<li class="ml-5 list-decimal my-1">$2</li>');
+  html = html.replace(/^(\d+)\.\s+(.*?)$/gm, '<li class="ml-5 list-decimal my-0.5">$2</li>');
 
-  // Multi-line code blocks
-  html = html.replace(/```(?:[a-zA-Z0-9_-]+)?\n([\s\S]*?)```/g, '<pre class="bg-black/15 dark:bg-white/5 p-3 rounded-lg font-mono text-xs overflow-x-auto my-2 border border-border/20">$1</pre>');
-
-  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  return <span dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 function ModelSelector({ provider, model, setModel }: { provider: string, model: string, setModel: (m: string) => void }) {
@@ -418,7 +520,7 @@ function ChatInnerContent({
                   return (
                     <div key={idx} className={`${m.role === 'user' ? 'bg-primary text-white dark:text-[#1a2e60] self-end rounded-tr-sm' : 'bg-secondary text-textMain self-start rounded-tl-sm'} rounded-2xl p-4 max-w-[90%] shadow-sm flex items-start gap-3`}>
                       <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans">
-                        {m.role === 'assistant' ? parseMarkdown(m.content) : m.content}
+                        {m.role === 'assistant' ? <MarkdownRenderer text={m.content} editorRef={editorRef} /> : m.content}
                       </div>
                     </div>
                   );
