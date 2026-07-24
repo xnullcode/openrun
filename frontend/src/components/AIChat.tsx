@@ -92,12 +92,6 @@ function ChatInnerContent({
               <h3 className="font-semibold text-textMain flex items-center gap-2">
                 <Settings size={16} /> Configuration
               </h3>
-              <button
-                onClick={() => setIsDocked(!isDocked)}
-                className="text-xs bg-secondary hover:bg-border text-textMain px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center gap-1"
-              >
-                {isDocked ? 'Switch to Floating' : 'Switch to Docked'}
-              </button>
             </div>
             <p className="text-xs text-textMuted mb-3">Configure your AI provider and model.</p>
             <div className="space-y-3">
@@ -331,35 +325,7 @@ export default function AIChat() {
   // If docked, we hide the floating window entirely
   if (isDocked) return null;
 
-  if (!isChatOpen) {
-    return (
-      <Rnd
-        key="fab"
-        position={fabPosition}
-        enableResizing={false}
-        bounds="window"
-        className="z-50"
-        onDragStart={() => { isDraggingRef.current = false; }}
-        onDrag={() => { isDraggingRef.current = true; }}
-        onDragStop={(_e, d) => { 
-          setFabPosition({ x: d.x, y: d.y });
-          // Reset dragging state after a tiny delay so onClick can check it
-          setTimeout(() => { isDraggingRef.current = false; }, 50);
-        }}
-      >
-        <button
-          onClick={() => {
-            if (!isDraggingRef.current) setIsChatOpen(true);
-          }}
-          className="w-14 h-14 bg-primary text-white dark:text-[#1a2e60] rounded-full shadow-2xl flex items-center justify-center hover:scale-105 transition-all"
-          title="Open AI Assistant"
-        >
-          <Sparkles size={24} />
-        </button>
-      </Rnd>
-    );
-  }
-
+  if (!isChatOpen) return null;
   const defaultWidth = Math.min(380, window.innerWidth - 40);
   const defaultHeight = Math.min(550, window.innerHeight - 100);
   const defaultX = Math.max(20, window.innerWidth - defaultWidth - 24);

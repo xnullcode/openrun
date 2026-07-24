@@ -44,7 +44,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<'description' | 'tests' | 'results' | 'ai'>('description');
   const [activeCaseIndex, setActiveCaseIndex] = useState(0);
   
-  const { isDocked, setIsDocked, setEditorRef, setIsChatOpen, setAttachedSnippets } = useAIChat();
+  const { isDocked, setIsDocked, setEditorRef, isChatOpen, setIsChatOpen, setAttachedSnippets } = useAIChat();
   const editorRef = useRef<any>(null);
 
   const [selectionPopup, setSelectionPopup] = useState<{ x: number, y: number, text: string } | null>(null);
@@ -90,12 +90,12 @@ function App() {
   };
 
   useEffect(() => {
-    if (isDocked) {
+    if (isDocked && isChatOpen) {
       setActiveTab('ai');
     } else if (activeTab === 'ai') {
       setActiveTab('description');
     }
-  }, [isDocked]);
+  }, [isDocked, isChatOpen]);
   const [scrapeUrl, setScrapeUrl] = useState('');
   const [problemDescription, setProblemDescription] = useState(() => localStorage.getItem('openrun_desc') || '');
   const [isLoading, setIsLoading] = useState(false);
@@ -453,7 +453,7 @@ function App() {
               >
                 Test Result
               </button>
-              {isDocked && (
+              {isChatOpen && isDocked && (
                 <button 
                   className={`flex-1 text-sm font-medium transition-colors ${activeTab === 'ai' ? 'text-primary border-b-2 border-primary' : 'text-textMuted hover:text-white'}`}
                   onClick={() => setActiveTab('ai')}
