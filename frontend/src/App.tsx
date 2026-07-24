@@ -389,7 +389,7 @@ function App() {
             {/* Pane Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
               {activeTab === 'description' && (
-                <div className="flex-1 p-4 overflow-y-auto custom-scrollbar problem-description text-sm text-gray-300">
+                <div className="flex-1 p-4 overflow-y-auto custom-scrollbar problem-description text-sm text-textMain">
                   {problemDescription ? (
                     <div dangerouslySetInnerHTML={{ __html: problemDescription }} />
                   ) : (
@@ -426,17 +426,17 @@ function App() {
                   {currentTest && (
                     <div className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2 custom-scrollbar">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-sm font-medium text-gray-300">Test Case {activeCaseIndex + 1}</h4>
+                        <h4 className="text-sm font-medium text-textMain">Test Case {activeCaseIndex + 1}</h4>
                         <button 
                           onClick={() => removeTestCase(activeCaseIndex)}
-                          className="text-red-400 hover:text-red-300 flex items-center gap-1 text-xs"
+                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-1 text-xs"
                           title="Delete Test Case"
                         >
                           <Trash2 size={14} /> Delete
                         </button>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs text-neutral-400">Input</label>
+                        <label className="text-xs text-textMuted">Input</label>
                         <textarea
                           className="w-full bg-secondary rounded-md p-3 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary text-textMain resize-y min-h-[100px]"
                           value={currentTest.input}
@@ -445,7 +445,7 @@ function App() {
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs text-neutral-400">Expected Output</label>
+                        <label className="text-xs text-textMuted">Expected Output</label>
                         <textarea
                           className="w-full bg-secondary rounded-md p-3 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary text-textMain resize-y min-h-[100px]"
                           value={currentTest.expectedOutput}
@@ -473,9 +473,9 @@ function App() {
                     <div className="flex flex-col h-full overflow-hidden">
                       {/* Global Results Status */}
                       <div className="mb-4 shrink-0">
-                        <h2 className={`text-2xl font-bold ${globalStatus === 'Accepted' ? 'text-green-500' : globalStatus === 'Output Generated' ? 'text-blue-400' : 'text-red-500'}`}>{globalStatus}</h2>
+                        <h2 className={`text-2xl font-bold ${globalStatus === 'Accepted' ? 'text-green-600 dark:text-green-500' : globalStatus === 'Output Generated' ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-500'}`}>{globalStatus}</h2>
                         {globalStatus !== "Error" && (
-                          <p className="text-sm text-neutral-400 mt-1">Runtime: {totalRuntime} ms</p>
+                          <p className="text-sm text-textMuted mt-1">Runtime: {totalRuntime} ms</p>
                         )}
                       </div>
                       
@@ -487,7 +487,7 @@ function App() {
                             onClick={() => setActiveCaseIndex(idx)}
                             className={`px-3 py-1 text-sm font-medium rounded-md whitespace-nowrap transition-colors flex items-center gap-2 ${safeResultIndex === idx ? 'bg-primary/20 text-primary' : 'text-textMuted hover:bg-secondary/50'}`}
                           >
-                            {res.passed ? <CheckCircle size={14} className="text-green-500" /> : <XCircle size={14} className="text-red-500" />}
+                            {res.passed ? <CheckCircle size={14} className="text-green-600 dark:text-green-500" /> : <XCircle size={14} className="text-red-600 dark:text-red-500" />}
                             {res.testCaseIndex === -1 ? 'Execution Error' : `Case ${idx + 1}`}
                           </button>
                         ))}
@@ -498,23 +498,23 @@ function App() {
                         <div className="flex-1 overflow-y-auto mt-4 space-y-4 pr-2 custom-scrollbar">
                           {currentResult.error && (
                             <div className="space-y-1">
-                              <label className="text-xs text-red-400 uppercase tracking-wider font-semibold">Error / Stderr</label>
-                              <pre className="w-full bg-secondary rounded-md p-3 text-sm font-mono text-red-500 overflow-x-auto whitespace-pre-wrap min-h-[100px]">{currentResult.error}</pre>
+                              <label className="text-xs text-red-600 dark:text-red-400 uppercase tracking-wider font-semibold">Error / Stderr</label>
+                              <pre className="w-full bg-secondary rounded-md p-3 text-sm font-mono text-red-600 dark:text-red-400 overflow-x-auto whitespace-pre-wrap min-h-[100px]">{currentResult.error}</pre>
                             </div>
                           )}
                           {!currentResult.error && (
                             <>
                               <div className="space-y-1">
-                                <label className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">Input</label>
+                                <label className="text-xs text-textMuted font-semibold uppercase tracking-wider">Input</label>
                                 <pre className="w-full bg-secondary rounded-md p-3 text-sm font-mono text-textMain overflow-x-auto whitespace-pre-wrap min-h-[60px]">{testCases[safeResultIndex]?.input || "N/A"}</pre>
                               </div>
                               <div className="space-y-1">
-                                <label className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">Output</label>
-                                <pre className="w-full bg-secondary rounded-md p-3 text-sm font-mono text-textMain overflow-x-auto whitespace-pre-wrap min-h-[60px]">{currentResult.output || <span className="text-gray-500 italic">No output</span>}</pre>
+                                <label className="text-xs text-textMuted font-semibold uppercase tracking-wider">Output</label>
+                                <pre className="w-full bg-secondary rounded-md p-3 text-sm font-mono text-textMain overflow-x-auto whitespace-pre-wrap min-h-[60px]">{currentResult.output || <span className="text-textMuted italic">No output</span>}</pre>
                               </div>
                               <div className="space-y-1">
-                                <label className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">Expected</label>
-                                <pre className="w-full bg-secondary rounded-md p-3 text-sm font-mono text-textMain overflow-x-auto whitespace-pre-wrap min-h-[60px]">{currentResult.expectedOutput || <span className="text-gray-500 italic">None</span>}</pre>
+                                <label className="text-xs text-textMuted font-semibold uppercase tracking-wider">Expected</label>
+                                <pre className="w-full bg-secondary rounded-md p-3 text-sm font-mono text-textMain overflow-x-auto whitespace-pre-wrap min-h-[60px]">{currentResult.expectedOutput || <span className="text-textMuted italic">None</span>}</pre>
                               </div>
                             </>
                           )}
