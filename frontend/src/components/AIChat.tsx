@@ -465,7 +465,7 @@ export default function AIChat() {
 // The docked component (rendered by App.tsx)
 export function DockedAIChat() {
   const [activeTab, setActiveTab] = useState<'chat' | 'clipboard' | 'settings'>('chat');
-  const { setIsDocked, provider, model, setModel } = useAIChat();
+  const { setIsDocked, setIsChatOpen, provider, model, setModel } = useAIChat();
   
   return (
     <div className="h-full flex flex-col bg-background relative border-l border-border z-10 w-full min-w-[300px]">
@@ -488,6 +488,16 @@ export function DockedAIChat() {
             title="Settings"
           >
             <Settings size={16} className="text-textMuted" />
+          </button>
+          <button 
+            onClick={() => {
+              setIsDocked(false);
+              setIsChatOpen(false);
+            }}
+            className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+            title="Close AI Chat"
+          >
+            <X size={16} className="text-textMuted" />
           </button>
         </div>
       </div>
