@@ -76,7 +76,7 @@ function ChatInnerContent({
   const handleProviderChange = (p: AIProvider) => {
     setProvider(p);
     localStorage.setItem('openrun_ai_provider', p);
-    if (p !== 'custom' && p !== 'anthropic' && p !== 'gemini') {
+    if (PROVIDERS[p]) {
       setBaseUrl(PROVIDERS[p].defaultBaseUrl);
       setModel(PROVIDERS[p].defaultModel);
       localStorage.setItem('openrun_ai_baseUrl', PROVIDERS[p].defaultBaseUrl);
@@ -147,7 +147,7 @@ function ChatInnerContent({
                 <select 
                   value={provider} 
                   onChange={e => handleProviderChange(e.target.value as AIProvider)}
-                  className="w-full bg-secondary border-none rounded-lg p-2 text-sm text-textMain focus:ring-1 focus:ring-primary outline-none"
+                  className="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-2 text-sm text-textMain focus:ring-1 focus:ring-primary outline-none"
                 >
                   {Object.entries(PROVIDERS).map(([key, val]) => (
                     <option key={key} value={key}>{val.name}</option>
@@ -160,7 +160,7 @@ function ChatInnerContent({
                   type="text" 
                   value={baseUrl}
                   onChange={e => setBaseUrl(e.target.value)}
-                  className="w-full bg-secondary border-none rounded-lg p-2 text-sm text-textMain focus:ring-1 focus:ring-primary outline-none"
+                  className="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-2 text-sm text-textMain placeholder-textMuted/70 focus:ring-1 focus:ring-primary outline-none"
                 />
               </div>
               <div>
@@ -169,7 +169,7 @@ function ChatInnerContent({
                   type="text" 
                   value={model}
                   onChange={e => setModel(e.target.value)}
-                  className="w-full bg-secondary border-none rounded-lg p-2 text-sm text-textMain focus:ring-1 focus:ring-primary outline-none"
+                  className="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-2 text-sm text-textMain placeholder-textMuted/70 focus:ring-1 focus:ring-primary outline-none"
                 />
               </div>
             </div>
@@ -192,7 +192,7 @@ function ChatInnerContent({
                     placeholder="Session Password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    className="w-full bg-secondary border-none rounded-lg p-2 pr-8 text-sm text-textMain focus:ring-1 focus:ring-primary outline-none"
+                    className="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-2 pr-8 text-sm text-textMain placeholder-textMuted/70 focus:ring-1 focus:ring-primary outline-none"
                   />
                   <button 
                     onClick={() => setShowPassword(!showPassword)}
@@ -220,7 +220,7 @@ function ChatInnerContent({
                     value={apiKey}
                     onChange={e => setApiKey(e.target.value)}
                     placeholder="sk-..."
-                    className="w-full bg-secondary border-none rounded-lg p-2 text-sm text-textMain focus:ring-1 focus:ring-primary outline-none"
+                    className="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-2 text-sm text-textMain placeholder-textMuted/70 focus:ring-1 focus:ring-primary outline-none"
                   />
                 </div>
                 
@@ -232,7 +232,7 @@ function ChatInnerContent({
                       placeholder="Set a password to encrypt"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      className="w-full bg-secondary border-none rounded-lg p-2 pr-8 text-sm text-textMain focus:ring-1 focus:ring-primary outline-none"
+                      className="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-2 pr-8 text-sm text-textMain placeholder-textMuted/70 focus:ring-1 focus:ring-primary outline-none"
                     />
                     <button 
                       onClick={() => setShowPassword(!showPassword)}
@@ -331,11 +331,11 @@ function ChatInnerContent({
                 )}
 
 
-                  <div className="flex items-center gap-2 bg-secondary rounded-[24px] p-1.5 pl-4 pr-1.5 border border-border focus-within:border-primary/50 transition-colors shadow-inner">
+                  <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 rounded-[24px] p-1.5 pl-4 pr-1.5 border border-border focus-within:border-primary/50 transition-colors shadow-inner">
                     <input 
                       type="text" 
                       placeholder="Ask anything"
-                      className="flex-1 bg-transparent border-none focus:outline-none text-sm text-textMain py-1"
+                      className="flex-1 bg-transparent border-none focus:outline-none text-sm text-textMain placeholder-textMuted/70 py-1"
                     />
                     <button className="w-8 h-8 rounded-full bg-primary text-white dark:text-[#1a2e60] flex items-center justify-center hover:scale-105 transition-transform shadow-md">
                       <Send size={14} className="ml-[-2px]" />
