@@ -111,6 +111,10 @@ do_start() {
     if is_server_running; then
         success "Docker container is already running."
     else
+        info "Clearing port ${PORT}..."
+        fuser -k ${PORT}/tcp 2>/dev/null
+        sleep 1
+
         info "Building and starting Docker container..."
         $DOCKER_CMD compose up -d --build
         sleep 2
@@ -138,6 +142,8 @@ do_ngrok_only() {
 
     if ! is_server_running; then
         warn "Docker container is not running. Starting it first..."
+        fuser -k ${PORT}/tcp 2>/dev/null
+        sleep 1
         $DOCKER_CMD compose up -d
         sleep 2
     fi
