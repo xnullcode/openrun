@@ -25,6 +25,7 @@ function ChatInnerContent({
     isUnlocked, setIsUnlocked,
     chatMode, setChatMode,
     attachedSnippets, setAttachedSnippets,
+    isDocked, setIsDocked,
     editorRef
   } = useAIChat();
 
@@ -104,11 +105,19 @@ function ChatInnerContent({
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-background relative">
       {activeTab === 'settings' && (
-        <div className="absolute inset-0 bg-surface z-10 p-5 overflow-y-auto custom-scrollbar flex flex-col gap-5">
+        <div className="flex-1 bg-surface p-5 overflow-y-auto custom-scrollbar flex flex-col gap-5">
           <div>
-            <h3 className="font-semibold text-textMain flex items-center gap-2 mb-1">
-              <Settings size={16} /> Configuration
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-textMain flex items-center gap-2">
+                <Settings size={16} /> Configuration
+              </h3>
+              <button
+                onClick={() => setIsDocked(!isDocked)}
+                className="text-xs bg-secondary hover:bg-border text-textMain px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center gap-1"
+              >
+                {isDocked ? 'Switch to Floating' : 'Switch to Docked'}
+              </button>
+            </div>
             <p className="text-xs text-textMuted mb-3">Configure your AI provider and model.</p>
             <div className="space-y-3">
               <div>
@@ -273,9 +282,6 @@ function ChatInnerContent({
             <>
               <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 custom-scrollbar pb-6">
                 <div className="bg-secondary self-start rounded-2xl rounded-tl-sm p-4 max-w-[90%] shadow-sm border border-border flex items-start gap-3">
-                  <div className="bg-primary/10 p-2 rounded-full shrink-0">
-                    <Bot size={16} className="text-primary" />
-                  </div>
                   <p className="text-sm text-textMain leading-relaxed pt-1">
                     Hello! I'm your AI coding assistant. I'm currently in <span className="font-bold text-primary">{chatMode === 'help' ? 'Helping Mode' : 'Full Code Mode'}</span>.
                     <br/><br/>
@@ -315,7 +321,7 @@ function ChatInnerContent({
                   <div className="flex items-center gap-2 bg-secondary rounded-[24px] p-1.5 pl-4 pr-1.5 border border-border focus-within:border-primary/50 transition-colors shadow-inner">
                     <input 
                       type="text" 
-                      placeholder="Message AI..."
+                      placeholder="Ask Anything"
                       className="flex-1 bg-transparent border-none focus:outline-none text-sm text-textMain py-1"
                     />
                     <button className="w-8 h-8 rounded-full bg-primary text-white dark:text-[#1a2e60] flex items-center justify-center hover:scale-105 transition-transform shadow-md">
@@ -391,15 +397,21 @@ export default function AIChat() {
   return (
     <Rnd
       key="chat-window"
-      default={{ x: defaultX, y: defaultY, width: defaultWidth, height: defaultHeight }}
+      default={{
+        x: defaultX,
+        y: defaultY,
+        width: defaultWidth,
+        height: defaultHeight,
+      }}
       minWidth={300}
       minHeight={400}
       bounds="window"
       dragHandleClassName="drag-handle"
-      className="z-50 bg-surface border border-border rounded-[24px] shadow-2xl flex flex-col overflow-hidden"
+      className="z-50 bg-surface border border-border rounded-[24px] shadow-2xl overflow-hidden"
     >
-      {/* Header (Drag Handle) */}
-      <div className="drag-handle bg-secondary p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-border shrink-0">
+      <div className="flex flex-col w-full h-full">
+        {/* Floating Header */}
+        <div className="drag-handle bg-secondary p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-border shrink-0">
         <div className="flex items-center gap-2 px-2">
           <Sparkles size={18} className="text-primary" />
           <span className="font-bold text-textMain text-sm">AI Assistant</span>
@@ -422,12 +434,16 @@ export default function AIChat() {
           <button 
             onClick={() => setIsChatOpen(false)}
             className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+            title="Close"
           >
             <X size={16} className="text-textMuted" />
           </button>
         </div>
       </div>
-      <ChatInnerContent activeTab={activeTab} setActiveTab={setActiveTab} />
+
+        {/* Inner Content */}
+        <ChatInnerContent activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
     </Rnd>
   );
 }
