@@ -19,8 +19,7 @@ function ChatInnerContent({
     isUnlocked, setIsUnlocked,
     chatMode, setChatMode,
     attachedSnippets, setAttachedSnippets,
-    isDocked, setIsDocked,
-    editorRef
+    isDocked, setIsDocked
   } = useAIChat();
 
   const [password, setPassword] = useState('');
