@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
-export type AIProvider = 'openai' | 'groq' | 'anthropic' | 'gemini' | 'openrouter' | 'custom';
+export type AIProvider = 'openai' | 'groq' | 'anthropic' | 'gemini' | 'openrouter' | 'cerebras' | 'mistral' | 'huggingface' | 'cloudflare' | 'deepseek' | 'github' | 'nvidia' | 'custom';
 export type AIMode = 'help' | 'code';
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -65,8 +65,8 @@ export const PROVIDERS: Record<string, { name: string; defaultBaseUrl: string; d
   groq: { 
     name: 'Groq', 
     defaultBaseUrl: 'https://api.groq.com/openai/v1', 
-    defaultModel: 'llama-3.1-70b-versatile', 
-    models: ['llama-3.1-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma2-9b-it'] 
+    defaultModel: 'llama-3.1-8b-instant', 
+    models: ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'llama-4-scout', 'qwen-2.5-coder-32b', 'whisper-large-v3'] 
   },
   anthropic: {
     name: 'Anthropic',
@@ -75,23 +75,65 @@ export const PROVIDERS: Record<string, { name: string; defaultBaseUrl: string; d
     models: ['claude-3-5-sonnet-20240620', 'claude-3-opus-20240229', 'claude-3-haiku-20240307']
   },
   gemini: {
-    name: 'Google Gemini',
+    name: 'Google Gemini (AI Studio)',
     defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
-    defaultModel: 'gemini-1.5-pro',
-    models: ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.0-pro']
+    defaultModel: 'gemini-2.5-flash',
+    models: ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro']
   },
   openrouter: {
     name: 'OpenRouter (Free Tier)',
     defaultBaseUrl: 'https://openrouter.ai/api/v1',
-    defaultModel: 'meta-llama/llama-3.1-8b-instruct:free',
+    defaultModel: 'meta-llama/llama-3.3-70b-instruct:free',
     models: [
-      'meta-llama/llama-3.1-8b-instruct:free', 
-      'google/gemini-pro:free', 
-      'mistralai/mistral-7b-instruct:free',
-      'meta-llama/llama-3.1-70b-instruct',
-      'anthropic/claude-3.5-sonnet', 
-      'openai/gpt-4o'
+      'meta-llama/llama-3.3-70b-instruct:free', 
+      'deepseek/deepseek-r1:free',
+      'qwen/qwen-3-coder:free',
+      'google/gemini-2.5-flash:free', 
+      'mistralai/mistral-small:free',
+      'nvidia/nemotron-4-340b-instruct:free'
     ]
+  },
+  cerebras: {
+    name: 'Cerebras',
+    defaultBaseUrl: 'https://api.cerebras.ai/v1',
+    defaultModel: 'llama3.3-70b',
+    models: ['llama3.3-70b', 'qwen-large']
+  },
+  mistral: {
+    name: 'Mistral',
+    defaultBaseUrl: 'https://api.mistral.ai/v1',
+    defaultModel: 'mistral-small-latest',
+    models: ['mistral-small-latest', 'ministral-8b-latest', 'mistral-large-latest']
+  },
+  huggingface: {
+    name: 'Hugging Face',
+    defaultBaseUrl: 'https://api-inference.huggingface.co/v1',
+    defaultModel: 'meta-llama/Llama-3.3-70B-Instruct',
+    models: ['meta-llama/Llama-3.3-70B-Instruct', 'Qwen/Qwen2.5-72B-Instruct', 'mistralai/Mistral-7B-Instruct-v0.3']
+  },
+  cloudflare: {
+    name: 'Cloudflare Workers AI',
+    defaultBaseUrl: 'https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/v1',
+    defaultModel: '@cf/meta/llama-3.3-70b-instruct',
+    models: ['@cf/meta/llama-3.3-70b-instruct', '@cf/qwen/qwen1.5-14b-chat-awq']
+  },
+  deepseek: {
+    name: 'DeepSeek',
+    defaultBaseUrl: 'https://api.deepseek.com/v1',
+    defaultModel: 'deepseek-reasoner',
+    models: ['deepseek-reasoner', 'deepseek-chat']
+  },
+  github: {
+    name: 'GitHub Models',
+    defaultBaseUrl: 'https://models.inference.ai.azure.com',
+    defaultModel: 'DeepSeek-R1',
+    models: ['DeepSeek-R1', 'Llama-3.3-70B-Instruct', 'AI21-Jamba-1.5-Mini']
+  },
+  nvidia: {
+    name: 'NVIDIA NIM',
+    defaultBaseUrl: 'https://integrate.api.nvidia.com/v1',
+    defaultModel: 'meta/llama-3.3-70b-instruct',
+    models: ['meta/llama-3.3-70b-instruct', 'nvidia/nemotron-4-340b-instruct']
   },
   custom: { 
     name: 'Custom', 
