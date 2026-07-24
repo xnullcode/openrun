@@ -259,7 +259,7 @@ function App() {
     : "";
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-background text-textMain overflow-hidden font-sans">
+    <div className="min-h-[100dvh] md:h-screen w-screen flex flex-col bg-background text-textMain overflow-x-hidden md:overflow-hidden font-sans">
       {/* Header */}
       <header className="py-2 min-h-[56px] border-b border-border bg-surface px-2 md:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3 shadow-md z-50 shrink-0">
         
@@ -380,7 +380,7 @@ function App() {
       </header>
 
       {/* Main Content with Resizable Panels */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-x-hidden md:overflow-hidden min-h-[800px] md:min-h-0">
         <Group orientation={layoutOrientation} className="w-full h-full">
           {/* Editor Panel */}
           <Panel defaultSize={50} minSize={20} className="flex flex-col bg-background">
