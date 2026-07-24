@@ -140,13 +140,15 @@ do_rebuild() {
     divider
     echo ""
     info "Forcing a clean rebuild of the Docker image..."
-    $DOCKER_CMD compose up -d --build --force-recreate
-    sleep 2
-    
-    if is_server_running; then
-        success "Server successfully rebuilt and started!"
+    if $DOCKER_CMD compose up -d --build --force-recreate; then
+        sleep 2
+        if is_server_running; then
+            success "Server successfully rebuilt and started!"
+        else
+            fail "Server failed to start after rebuild."
+        fi
     else
-        fail "Server failed to start after rebuild."
+        fail "Docker build failed! Please check the errors above."
     fi
     press_enter
 }

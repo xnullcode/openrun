@@ -44,7 +44,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<'description' | 'tests' | 'results' | 'ai'>('description');
   const [activeCaseIndex, setActiveCaseIndex] = useState(0);
   
-  const { isDocked, setEditorRef, setIsChatOpen, setAttachedSnippets } = useAIChat();
+  const { isDocked, setIsDocked, setEditorRef, setIsChatOpen, setAttachedSnippets } = useAIChat();
   const editorRef = useRef<any>(null);
 
   const [selectionPopup, setSelectionPopup] = useState<{ x: number, y: number, text: string } | null>(null);
@@ -344,11 +344,24 @@ function App() {
                     {/* Tools Pane Toggle */}
                     <button 
                       onClick={() => setShowToolsPane(!showToolsPane)}
-                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors col-span-2 ${showToolsPane ? 'bg-primary text-white dark:text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
+                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors col-span-1 ${showToolsPane ? 'bg-primary text-white dark:text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
                     >
                       <div className="mb-2"><BookOpen size={20} /></div>
                       <span className="font-medium text-sm">Tools Pane</span>
                       <span className="text-xs opacity-70">{showToolsPane ? 'Enabled' : 'Disabled'}</span>
+                    </button>
+
+                    {/* AI Mode Toggle */}
+                    <button 
+                      onClick={() => {
+                        setIsDocked(!isDocked);
+                        setIsChatOpen(true);
+                      }}
+                      className={`flex flex-col items-start p-4 rounded-[20px] transition-colors ${isDocked ? 'bg-primary text-white dark:text-[#1a2e60]' : 'bg-[#303034] text-white hover:bg-[#3a3a3f]'}`}
+                    >
+                      <div className="mb-2"><Sparkles size={20} /></div>
+                      <span className="font-medium text-sm">AI Chat</span>
+                      <span className="text-xs opacity-70">{isDocked ? 'Docked' : 'Floating'}</span>
                     </button>
                   </div>
                 </div>
