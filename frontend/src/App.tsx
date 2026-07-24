@@ -54,25 +54,23 @@ function App() {
     editorRef.current = editor;
     setEditorRef(editorRef);
 
-    editor.onMouseUp((e: any) => {
-      const selection = editor.getSelection();
+    editor.onDidChangeCursorSelection((e: any) => {
+      const selection = e.selection;
       if (selection && !selection.isEmpty()) {
         const text = editor.getModel()?.getValueInRange(selection);
-        // e.event.browserEvent contains the standard MouseEvent
-        if (text && e.event.browserEvent) {
-          setSelectionPopup({ 
-            x: e.event.browserEvent.clientX, 
-            y: e.event.browserEvent.clientY - 40, 
-            text 
-          });
+        const domNode = editor.getDomNode();
+        if (text && domNode) {
+          const pos = editor.getScrolledVisiblePosition(selection.getStartPosition());
+          if (pos) {
+            const rect = domNode.getBoundingClientRect();
+            setSelectionPopup({
+              x: rect.left + pos.left,
+              y: rect.top + pos.top,
+              text
+            });
+          }
         }
       } else {
-        setSelectionPopup(null);
-      }
-    });
-
-    editor.onDidChangeCursorSelection((e: any) => {
-      if (e.selection.isEmpty()) {
         setSelectionPopup(null);
       }
     });
@@ -311,7 +309,7 @@ function App() {
             <RotateCcw size={16} />
           </button>
 
-          <div className="relative">
+          <div className="relative flex items-center h-9">
             <button onClick={() => setIsSettingsOpen(!isSettingsOpen)} className={`p-1.5 rounded-lg transition-colors h-9 w-9 flex items-center justify-center ${isSettingsOpen ? 'bg-secondary text-textMain' : 'text-textMuted hover:text-textMain hover:bg-secondary'}`} title="Settings">
               <Settings size={16} />
             </button>
@@ -410,7 +408,8 @@ function App() {
                   minimap: { enabled: false },
                   fontSize: fontSize,
                   fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                  padding: { top: 16 }
+                  padding: { top: 16 },
+                  mouseWheelZoom: true
                 }}
               />
             </div>

@@ -152,7 +152,7 @@ export default function Timer() {
   const textColor = isWarning ? 'text-white' : (isTimer ? 'text-orange-500' : 'text-primary');
 
   return (
-    <div className="relative" ref={popoverRef}>
+    <div className="relative flex items-center h-9" ref={popoverRef}>
       {isActive ? (
         <div className={`group flex items-center ${bgColor} px-2 py-1.5 rounded-lg text-sm ${isWarning ? 'text-white/80' : 'text-textMuted'} transition-all border h-9 shadow-sm cursor-default`}>
           <div className="flex items-center">

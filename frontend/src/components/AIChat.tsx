@@ -26,12 +26,12 @@ function ModelSelector({ provider, model, setModel }: { provider: string, model:
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-1 text-textMain hover:bg-black/5 dark:hover:bg-white/5 rounded-xl px-2 h-8 transition-colors max-w-full overflow-hidden"
       >
-        <span className="text-[14px] flex items-center gap-1 overflow-hidden whitespace-nowrap flex-nowrap shrink">
-          <span className="font-normal opacity-80 shrink-0">{providerName}</span>
-          <span className="font-bold truncate max-w-[100px]" title={model}>
+        <div className="text-[14px] flex items-center gap-1 overflow-hidden whitespace-nowrap flex-nowrap shrink">
+          <span className="font-normal opacity-80 shrink-0 mt-[1px]">{providerName}</span>
+          <span className="font-bold mt-[1px]" title={model}>
             {model.length > 14 ? model.substring(0, 14) + '...' : model}
           </span>
-        </span>
+        </div>
         <ChevronDown size={14} className={`text-textMuted shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -424,7 +424,7 @@ export default function AIChat() {
   const [activeTab, setActiveTab] = useState<'chat' | 'clipboard' | 'settings'>('chat');
   const { isAIEnabled, isDocked, setIsDocked, isChatOpen, setIsChatOpen, provider, model, setModel } = useAIChat();
 
-  const isDraggingRef = useRef(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
   const getFabOffset = () => window.innerWidth <= 768 ? 70 : 80;
   
   const [fabPosition, setFabPosition] = useState({ 
@@ -464,17 +464,16 @@ export default function AIChat() {
         enableResizing={false}
         bounds="window"
         className="z-50"
-        onDragStart={() => { isDraggingRef.current = false; }}
-        onDrag={() => { isDraggingRef.current = true; }}
+        onDragStart={(_e, d) => { dragStartPos.current = { x: d.x, y: d.y }; }}
         onDragStop={(_e, d) => { 
           setFabPosition({ x: d.x, y: d.y });
-          setTimeout(() => { isDraggingRef.current = false; }, 50);
+          const dist = Math.abs(d.x - dragStartPos.current.x) + Math.abs(d.y - dragStartPos.current.y);
+          if (dist < 10) {
+            setIsChatOpen(true);
+          }
         }}
       >
         <button
-          onClick={() => {
-            if (!isDraggingRef.current) setIsChatOpen(true);
-          }}
           className="w-14 h-14 bg-primary text-white dark:text-[#1a2e60] rounded-full shadow-2xl flex items-center justify-center hover:scale-105 transition-all"
           title="Open AI Assistant"
         >
@@ -508,13 +507,11 @@ export default function AIChat() {
       <div className="flex flex-col w-full h-full">
         {/* Floating Header */}
         <div className="drag-handle bg-secondary p-3 flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-border shrink-0">
-          <div className="flex-1 flex items-center px-2">
-            <Sparkles size={18} className="text-primary shrink-0" />
-          </div>
-          <div className="flex justify-center flex-none">
-            <ModelSelector provider={provider} model={model} setModel={setModel} />
-          </div>
-          <div className="flex-1 flex items-center justify-end gap-1 px-1">
+        <div className="flex items-center gap-1 px-2">
+          <Sparkles size={18} className="text-primary shrink-0 mr-1" />
+          <ModelSelector provider={provider} model={model} setModel={setModel} />
+        </div>
+        <div className="flex items-center gap-1 px-1">
           <button 
             onClick={() => setIsDocked(true)}
             className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
