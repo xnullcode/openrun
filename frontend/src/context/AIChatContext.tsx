@@ -34,8 +34,6 @@ interface AIChatContextType {
   setModel: (val: string) => void;
   apiKey: string;
   setApiKey: (val: string) => void;
-  isUnlocked: boolean;
-  setIsUnlocked: (val: boolean) => void;
   
   // Chat State
   chatMode: AIMode;
@@ -157,7 +155,6 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [baseUrl, setBaseUrl] = useState(PROVIDERS.openai.defaultBaseUrl);
   const [model, setModel] = useState(PROVIDERS.openai.defaultModel);
   const [apiKey, setApiKey] = useState('');
-  const [isUnlocked, setIsUnlocked] = useState(false);
   const [chatMode, setChatMode] = useState<AIMode>('help');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [attachedSnippets, setAttachedSnippets] = useState<string[]>([]);
@@ -183,12 +180,8 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       } catch (e) {}
     }
 
-    const encryptedKey = localStorage.getItem('openrun_ai_key_enc');
-    if (encryptedKey) {
-      setIsUnlocked(false);
-    } else {
-      setIsUnlocked(true);
-    }
+    const storedKey = localStorage.getItem('openrun_ai_key');
+    if (storedKey) setApiKey(storedKey);
   }, []);
 
   const value = {
@@ -199,7 +192,6 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     baseUrl, setBaseUrl,
     model, setModel,
     apiKey, setApiKey,
-    isUnlocked, setIsUnlocked,
     chatMode, setChatMode,
     messages, setMessages,
     attachedSnippets, setAttachedSnippets,

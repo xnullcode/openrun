@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Rnd } from 'react-rnd';
-import { Sparkles, X, Send, Settings, Lock, Unlock, Save, Eye, EyeOff, Pin, Trash2, PanelRightClose, PanelLeft, ChevronDown, Check } from 'lucide-react';
-import { encryptData, decryptData } from '../utils/crypto';
+import { Sparkles, X, Send, Settings, Save, Pin, Trash2, PanelRightClose, PanelLeft, ChevronDown, Check } from 'lucide-react';
 import { useAIChat, type AIProvider, PROVIDERS } from '../context/AIChatContext';
 
 function ModelSelector({ provider, model, setModel }: { provider: string, model: string, setModel: (m: string) => void }) {
@@ -61,21 +60,17 @@ function ChatInnerContent({
   activeTab: 'chat' | 'clipboard' | 'settings',
   setActiveTab: React.Dispatch<React.SetStateAction<'chat' | 'clipboard' | 'settings'>>
 }) {
-  const {
+  const { 
     provider, setProvider,
     baseUrl, setBaseUrl,
     model, setModel,
     apiKey, setApiKey,
-    isUnlocked, setIsUnlocked,
     chatMode, setChatMode,
     attachedSnippets, setAttachedSnippets,
     messages, setMessages,
     problemDescription, editorRef
   } = useAIChat();
 
-  const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -195,46 +190,16 @@ function ChatInnerContent({
     }
   };
 
-  const handleUnlock = async () => {
-    setErrorMsg('');
-    const encryptedKey = localStorage.getItem('openrun_ai_key_enc');
-    if (!encryptedKey) {
-      setIsUnlocked(true);
-      return;
-    }
-    try {
-      const dec = await decryptData(encryptedKey, password);
-      setApiKey(dec);
-      setIsUnlocked(true);
-      setPassword('');
-    } catch (e) {
-      setErrorMsg('Incorrect password or corrupted data.');
-    }
-  };
-
-  const handleSaveKey = async () => {
-    if (!password) {
-      setErrorMsg('You must set a password to encrypt the key.');
-      return;
-    }
-    setErrorMsg('');
-    try {
-      const enc = await encryptData(apiKey, password);
-      localStorage.setItem('openrun_ai_key_enc', enc);
-      localStorage.setItem('openrun_ai_baseUrl', baseUrl);
-      localStorage.setItem('openrun_ai_model', model);
-      setIsUnlocked(true);
-      setPassword('');
-      setActiveTab('chat');
-    } catch (e) {
-      setErrorMsg('Failed to encrypt key.');
-    }
+  const handleSaveKey = () => {
+    localStorage.setItem('openrun_ai_key', apiKey);
+    localStorage.setItem('openrun_ai_baseUrl', baseUrl);
+    localStorage.setItem('openrun_ai_model', model);
+    setActiveTab('chat');
   };
 
   const handleClearKey = () => {
-    localStorage.removeItem('openrun_ai_key_enc');
+    localStorage.removeItem('openrun_ai_key');
     setApiKey('');
-    setIsUnlocked(true);
   };
 
   const removeAttachment = (index: number) => {
@@ -288,93 +253,42 @@ function ChatInnerContent({
 
           <div className="border-t border-border pt-4 pb-10">
             <h3 className="font-semibold text-textMain flex items-center gap-2 mb-1">
-              <Lock size={16} /> API Security
+              API Key Settings
             </h3>
             <p className="text-xs text-textMuted mb-3">
-              Your API key is encrypted with AES-GCM and stored locally. Set a password to encrypt it.
+              Your API key is stored locally in your browser's localStorage.
             </p>
 
-            {!isUnlocked && (
-              <div className="space-y-3 bg-secondary/50 p-3 rounded-xl border border-border">
-                <p className="text-sm font-medium text-textMain mb-2">Unlock your API Key</p>
-                <div className="relative">
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    placeholder="Session Password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    className="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-2 pr-8 text-sm text-textMain placeholder-textMuted/70 focus:ring-1 focus:ring-primary outline-none"
-                  />
-                  <button 
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-textMuted hover:text-textMain"
-                  >
-                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </button>
-                </div>
-                {errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-textMuted uppercase tracking-wider mb-1 block">API Key</label>
+                <input 
+                  type="password" 
+                  value={apiKey}
+                  onChange={e => setApiKey(e.target.value)}
+                  placeholder="sk-..."
+                  className="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-2 text-sm text-textMain placeholder-textMuted/70 focus:ring-1 focus:ring-primary outline-none"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
                 <button 
-                  onClick={handleUnlock}
-                  className="w-full bg-primary text-white dark:text-[#1a2e60] rounded-lg py-2 text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  onClick={handleSaveKey}
+                  className="flex-1 bg-primary text-white dark:text-[#1a2e60] rounded-lg py-2 text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 >
-                  <Unlock size={14} /> Unlock Session
+                  <Save size={14} /> Save Configuration
                 </button>
-              </div>
-            )}
-
-            {isUnlocked && (
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-semibold text-textMuted uppercase tracking-wider mb-1 block">API Key</label>
-                  <input 
-                    type="password" 
-                    value={apiKey}
-                    onChange={e => setApiKey(e.target.value)}
-                    placeholder="sk-..."
-                    className="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-2 text-sm text-textMain placeholder-textMuted/70 focus:ring-1 focus:ring-primary outline-none"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-xs font-semibold text-textMuted uppercase tracking-wider mb-1 block">Encryption Password</label>
-                  <div className="relative">
-                    <input 
-                      type={showPassword ? "text" : "password"} 
-                      placeholder="Set a password to encrypt"
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      className="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-2 pr-8 text-sm text-textMain placeholder-textMuted/70 focus:ring-1 focus:ring-primary outline-none"
-                    />
-                    <button 
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-textMuted hover:text-textMain"
-                    >
-                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                    </button>
-                  </div>
-                </div>
-
-                {errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}
-
-                <div className="flex gap-2">
+                {localStorage.getItem('openrun_ai_key') && (
                   <button 
-                    onClick={handleSaveKey}
-                    className="flex-1 bg-primary text-white dark:text-[#1a2e60] rounded-lg py-2 text-sm font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                    onClick={handleClearKey}
+                    className="px-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg py-2 text-sm font-semibold transition-colors flex items-center justify-center"
+                    title="Clear saved key"
                   >
-                    <Save size={14} /> Save & Encrypt
+                    <Trash2 size={14} />
                   </button>
-                  {localStorage.getItem('openrun_ai_key_enc') && (
-                    <button 
-                      onClick={handleClearKey}
-                      className="px-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg py-2 text-sm font-semibold transition-colors flex items-center justify-center"
-                      title="Clear saved key"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}
@@ -409,20 +323,6 @@ function ChatInnerContent({
             </div>
           </div>
 
-          {!isUnlocked ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-              <Lock size={48} className="text-textMuted mb-4 opacity-50" />
-              <p className="text-sm font-medium text-textMain mb-2">API Key Locked</p>
-              <p className="text-xs text-textMuted mb-4">Please unlock your API key in the settings to start chatting.</p>
-              <button 
-                onClick={() => setActiveTab('settings')}
-                className="bg-secondary hover:bg-border text-textMain px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-              >
-                Go to Settings
-              </button>
-            </div>
-          ) : (
-            <>
               <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 custom-scrollbar pb-6">
                 <div className="bg-secondary self-start rounded-2xl rounded-tl-sm p-4 max-w-[90%] shadow-sm border border-border flex items-start gap-3">
                   <p className="text-sm text-textMain leading-relaxed pt-1">
@@ -497,8 +397,6 @@ function ChatInnerContent({
                     </button>
                   </div>
               </div>
-            </>
-          )}
         </div>
       )}
     </div>
