@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { Rnd } from 'react-rnd';
 import { Sparkles, X, Send, Settings, Lock, Unlock, Save, Eye, EyeOff, Pin, Trash2, PanelRightClose, PanelLeft } from 'lucide-react';
 import { encryptData, decryptData } from '../utils/crypto';
@@ -18,8 +18,7 @@ function ChatInnerContent({
     apiKey, setApiKey,
     isUnlocked, setIsUnlocked,
     chatMode, setChatMode,
-    attachedSnippets, setAttachedSnippets,
-    isDocked, setIsDocked
+    attachedSnippets, setAttachedSnippets
   } = useAIChat();
 
   const [password, setPassword] = useState('');
@@ -307,20 +306,6 @@ function ChatInnerContent({
 export default function AIChat() {
   const [activeTab, setActiveTab] = useState<'chat' | 'clipboard' | 'settings'>('chat');
   const { isDocked, setIsDocked, isChatOpen, setIsChatOpen, provider, model, setModel } = useAIChat();
-
-  const isDraggingRef = useRef(false);
-  const [fabPosition, setFabPosition] = useState({ 
-    x: window.innerWidth - 80, 
-    y: window.innerHeight - 80 
-  });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setFabPosition({ x: window.innerWidth - 80, y: window.innerHeight - 80 });
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // If docked, we hide the floating window entirely
   if (isDocked) return null;
