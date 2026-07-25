@@ -495,8 +495,8 @@ function App() {
             {/* Settings Dropdown (Material You Style) */}
             {isSettingsOpen && (
               <>
-                <div className="fixed inset-0 z-40" onClick={() => setIsSettingsOpen(false)}></div>
-                <div className="fixed sm:absolute top-[70px] sm:top-full left-1/2 sm:left-auto right-auto sm:right-0 -translate-x-1/2 sm:translate-x-0 sm:mt-2 w-[95vw] sm:w-[320px] max-w-[350px] bg-[#1c1d21] rounded-[24px] p-4 shadow-2xl z-50 border border-white/5">
+                <div className="fixed inset-0 z-[60]" onClick={() => setIsSettingsOpen(false)}></div>
+                <div className="fixed sm:absolute top-[70px] sm:top-full left-1/2 sm:left-auto right-auto sm:right-0 -translate-x-1/2 sm:translate-x-0 sm:mt-2 w-[95vw] sm:w-[320px] max-w-[350px] bg-[#1c1d21] rounded-[24px] p-4 shadow-2xl z-[70] border border-white/5">
                   <div className="grid grid-cols-2 gap-3">
                     {/* Theme Toggle */}
                     <button 
