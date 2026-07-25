@@ -225,6 +225,8 @@ function ChatInnerContent({
     if (!inputMessage.trim() && attachedSnippets.length === 0) return;
     if (!apiKey) {
       setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Please configure your API key in Settings first.' }]);
+      setIsWaiting(true);
+      setTimeout(() => setIsWaiting(false), 500);
       return;
     }
     
@@ -382,9 +384,9 @@ function ChatInnerContent({
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-background relative">
-      {activeTab === 'settings' && (
-        <div className="flex-1 bg-surface p-5 overflow-y-auto custom-scrollbar flex flex-col gap-5">
-          <div>
+      {/* Settings Overlay */}
+      <div className={`absolute inset-0 z-20 bg-surface p-5 overflow-y-auto custom-scrollbar flex-col gap-5 ${activeTab === 'settings' ? 'flex' : 'hidden'}`}>
+        <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-textMain flex items-center gap-2">
                 <Settings size={16} /> Configuration
@@ -462,14 +464,13 @@ function ChatInnerContent({
                   </button>
                 )}
               </div>
-            </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {activeTab === 'chat' && (
-        <div className="flex-1 flex flex-col overflow-hidden relative">
-          {/* Mode Toggle Header */}
+      {/* Chat Tab (Always rendered to preserve scroll) */}
+      <div className="flex-1 flex-col overflow-hidden relative flex">
+        {/* Mode Toggle Header */}
           <div className="flex items-center justify-between p-2 bg-secondary/30 border-b border-border shrink-0 backdrop-blur-sm z-10 relative">
             <div className="flex-1" />
             <div className="flex items-center gap-1 bg-surface p-1 rounded-full border border-border">
@@ -598,7 +599,6 @@ function ChatInnerContent({
                   </div>
               </div>
         </div>
-      )}
     </div>
   );
 }
