@@ -107,7 +107,7 @@ function MarkdownRenderer({ text, editorRef }: { text: string; editorRef: React.
   while ((match = codeBlockRegex.exec(text)) !== null) {
     // Add text before this code block
     if (match.index > lastIndex) {
-      parts.push(<InlineMarkdown key={`text-${lastIndex}`} text={text.slice(lastIndex, match.index)} />);
+      parts.push(<InlineMarkdown key={`text-${lastIndex}`} text={text.slice(lastIndex, match.index).trim()} />);
     }
     // Add code block
     parts.push(<CodeBlock key={`code-${match.index}`} language={match[1]} code={match[2].trim()} editorRef={editorRef} />);
@@ -116,7 +116,7 @@ function MarkdownRenderer({ text, editorRef }: { text: string; editorRef: React.
 
   // Add remaining text
   if (lastIndex < text.length) {
-    parts.push(<InlineMarkdown key={`text-${lastIndex}`} text={text.slice(lastIndex)} />);
+    parts.push(<InlineMarkdown key={`text-${lastIndex}`} text={text.slice(lastIndex).trim()} />);
   }
 
   return <>{parts}</>;
@@ -140,10 +140,13 @@ function InlineMarkdown({ text }: { text: string }) {
   // Numbered lists
   html = html.replace(/^(\d+)\.\s+(.*?)$/gm, '<li class="ml-5 list-decimal my-0.5">$2</li>');
   // Headers (h1, h2, h3, h4)
-  html = html.replace(/^####\s+(.*?)$/gm, '<h4 class="font-bold text-base mt-3 mb-1">$1</h4>');
-  html = html.replace(/^###\s+(.*?)$/gm, '<h3 class="font-bold text-lg mt-3 mb-1">$1</h3>');
-  html = html.replace(/^##\s+(.*?)$/gm, '<h2 class="font-bold text-xl mt-4 mb-2">$1</h2>');
-  html = html.replace(/^#\s+(.*?)$/gm, '<h1 class="font-bold text-2xl mt-4 mb-2">$1</h1>');
+  html = html.replace(/^####\s+(.*?)$/gm, '<h4 class="font-bold text-base mt-1 mb-0">$1</h4>');
+  html = html.replace(/^###\s+(.*?)$/gm, '<h3 class="font-bold text-lg mt-1 mb-0">$1</h3>');
+  html = html.replace(/^##\s+(.*?)$/gm, '<h2 class="font-bold text-xl mt-1 mb-1">$1</h2>');
+  html = html.replace(/^#\s+(.*?)$/gm, '<h1 class="font-bold text-2xl mt-2 mb-1">$1</h1>');
+  
+  // Condense excessive newlines to prevent huge vertical gaps in pre-wrap
+  html = html.replace(/\n{3,}/g, '\n\n');
   
   return <span dangerouslySetInnerHTML={{ __html: html }} />;
 }
