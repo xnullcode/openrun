@@ -6,17 +6,7 @@ import axios from 'axios';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import Timer from './components/Timer';
 import AIChat, { DockedAIChat } from './components/AIChat';
-import { useAIChat, DEFAULT_CPP_CODE, DEFAULT_JAVA_CODE, type TestCase } from './context/AIChatContext';
-
-interface TestResult {
-  testCaseIndex: number;
-  passed: boolean;
-  output: string;
-  expectedOutput: string;
-  error: string;
-  executionTimeMs: number;
-  memoryUsed: string;
-}
+import { useAIChat, DEFAULT_CPP_CODE, DEFAULT_JAVA_CODE, type TestCase, type TestResult } from './context/AIChatContext';
 
 function App() {
   const { 
@@ -44,8 +34,9 @@ function App() {
   const setScrapeUrl = (val: string) => updateWorkspace(activeWorkspaceId, { url: val });
   
   const problemDescription = activeWorkspace.problemDescription;
+  const results = activeWorkspace.results || [];
+  const setResults = (val: TestResult[]) => updateWorkspace(activeWorkspaceId, { results: val });
 
-  const [results, setResults] = useState<TestResult[]>([]);
   const [activeTab, setActiveTab] = useState<'description' | 'tests' | 'results' | 'ai'>('description');
   const [activeCaseIndex, setActiveCaseIndex] = useState(0);
   const editorRef = useRef<any>(null);

@@ -23,6 +23,16 @@ export interface TestCase {
   expectedOutput: string;
 }
 
+export interface TestResult {
+  testCaseIndex: number;
+  passed: boolean;
+  output: string;
+  expectedOutput: string;
+  error: string;
+  executionTimeMs: number;
+  memoryUsed: string;
+}
+
 export interface Workspace {
   id: string;
   name: string;
@@ -32,6 +42,7 @@ export interface Workspace {
   url: string;
   problemDescription: any;
   testCases: TestCase[];
+  results?: TestResult[];
 }
 
 interface AIChatContextType {
@@ -95,24 +106,14 @@ interface AIChatContextType {
 
 const AIChatContext = createContext<AIChatContextType | undefined>(undefined);
 
-export const DEFAULT_JAVA_CODE = `import java.util.*;
-
-public class Solution {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        // Read your input here
-        // e.g. int n = scanner.nextInt();
-        
-        System.out.println("Hello, OpenRun!");
+export const DEFAULT_JAVA_CODE = `class Solution {
+    public int solve(int n) {
+        // Your code here
+        return n;
     }
 }`;
 
-export const DEFAULT_CPP_CODE = `#include <iostream>
-#include <vector>
-
-using namespace std;
-
-class Solution {
+export const DEFAULT_CPP_CODE = `class Solution {
 public:
     int solve(int n) {
         // Your code here
