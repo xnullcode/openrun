@@ -432,18 +432,17 @@ function App() {
       {/* Header */}
       <header className="py-2 min-h-[56px] border-b border-border bg-surface px-2 md:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3 shadow-md z-50 shrink-0">
         
-        {/* Left side: Logo & URL Input */}
-        <div className="flex items-center gap-3 md:gap-6 w-full md:w-auto md:flex-1 order-last md:order-none">
-          {/* Logo */}
-          <div className="flex items-center gap-2 md:gap-3 shrink-0">
-            <div className="bg-primary p-1.5 rounded-lg text-surface dark:text-[#1a2e60]">
-              <Cpu size={18} />
-            </div>
-            <h1 className="text-lg font-bold tracking-tight text-textMain hidden min-[414px]:block">OpenRun</h1>
+        {/* Left side: Logo */}
+        <div className="flex items-center gap-2 md:gap-3 shrink-0">
+          <div className="bg-primary p-1.5 rounded-lg text-surface dark:text-[#1a2e60]">
+            <Cpu size={18} />
           </div>
+          <h1 className="text-lg font-bold tracking-tight text-textMain hidden min-[414px]:block">OpenRun</h1>
+        </div>
 
-          {/* URL Input */}
-          <div className="flex-1 flex gap-1 bg-secondary border border-border p-1 rounded-lg max-w-lg">
+        {/* Center: URL Input */}
+        <div className="flex items-center w-full md:w-auto md:flex-1 md:max-w-lg md:mx-6 order-last md:order-none shrink-0 md:shrink">
+          <div className="flex-1 flex gap-1 bg-secondary border border-border p-1 rounded-lg">
             <input 
               type="text" 
               placeholder="Paste LeetCode/takeUforward URL" 
