@@ -213,7 +213,8 @@ function ChatInnerContent({
     chatMode, setChatMode,
     attachedSnippets, setAttachedSnippets,
     messages, setMessages,
-    problemDescription, editorRef, language
+    problemDescription, editorRef, language,
+    autoSendPrompt, setAutoSendPrompt, isDocked
   } = useAIChat();
 
   const [inputMessage, setInputMessage] = useState('');
@@ -239,9 +240,19 @@ function ChatInnerContent({
     }
   }, [isWaiting]);
 
+  useEffect(() => {
+    if (autoSendPrompt) {
+      if (isDocked) {
+        setActiveTab('chat');
+      }
+      handleSendMessage(autoSendPrompt);
+      setAutoSendPrompt('');
+    }
+  }, [autoSendPrompt]);
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() && attachedSnippets.length === 0) return;
+  const handleSendMessage = async (overrideMessage?: string) => {
+    const msgToUse = typeof overrideMessage === 'string' ? overrideMessage : inputMessage;
+    if (!msgToUse.trim() && attachedSnippets.length === 0) return;
     if (!apiKey) {
       setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Please configure your API key in Settings first.' }]);
       setIsWaiting(true);
@@ -249,7 +260,7 @@ function ChatInnerContent({
       return;
     }
     
-    let content = inputMessage;
+    let content = msgToUse;
     if (attachedSnippets.length > 0) {
       content += "\n\nAttached Code:\n" + attachedSnippets.map(s => "```" + language + "\n" + s + "\n```").join("\n");
       setAttachedSnippets([]);
@@ -632,7 +643,7 @@ function ChatInnerContent({
                       className="flex-1 bg-transparent border-none focus:outline-none text-sm text-textMain placeholder-textMuted/70 py-1"
                     />
                     <button 
-                      onClick={handleSendMessage}
+                      onClick={() => handleSendMessage()}
                       disabled={isSending}
                       className="w-8 h-8 rounded-full bg-primary text-white dark:text-[#1a2e60] flex items-center justify-center hover:scale-105 transition-transform shadow-md disabled:opacity-50"
                     >

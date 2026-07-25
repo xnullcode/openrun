@@ -50,6 +50,10 @@ interface AIChatContextType {
   problemDescription: any;
   setProblemDescription: React.Dispatch<React.SetStateAction<any>>;
 
+  // Auto Send
+  autoSendPrompt: string;
+  setAutoSendPrompt: React.Dispatch<React.SetStateAction<string>>;
+
   // Clipboard
   clipboardSnippets: Snippet[];
   setClipboardSnippets: React.Dispatch<React.SetStateAction<Snippet[]>>;
@@ -193,6 +197,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [language, setLanguage] = useState<'java' | 'cpp'>(() => {
     return (localStorage.getItem('openrun_language') as 'java' | 'cpp') || 'java';
   });
+  const [autoSendPrompt, setAutoSendPrompt] = useState('');
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -241,7 +246,8 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     problemDescription, setProblemDescription,
     clipboardSnippets, setClipboardSnippets,
     editorRef, setEditorRef,
-    language, setLanguage
+    language, setLanguage,
+    autoSendPrompt, setAutoSendPrompt
   };
 
   return <AIChatContext.Provider value={value}>{children}</AIChatContext.Provider>;

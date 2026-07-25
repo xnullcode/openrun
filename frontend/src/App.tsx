@@ -49,7 +49,7 @@ public:
 };`;
 
 function App() {
-  const { isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, problemDescription, setProblemDescription, setMessages: setAIMessages, language, setLanguage } = useAIChat();
+  const { isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, problemDescription, setProblemDescription, setMessages: setAIMessages, language, setLanguage, setAutoSendPrompt } = useAIChat();
 
   const [javaCode, setJavaCode] = useState(() => localStorage.getItem('openrun_java_code') || DEFAULT_JAVA_CODE);
   const [cppCode, setCppCode] = useState(() => localStorage.getItem('openrun_cpp_code') || DEFAULT_CPP_CODE);
@@ -103,6 +103,20 @@ function App() {
         setIsChatOpen(true);
       }
       setSelectionPopup(null);
+    }
+  };
+
+  const handleOptimizeAI = () => {
+    if (!isAIEnabled) return;
+    const currentCode = editorRef?.current?.getValue();
+    if (currentCode) {
+      setAttachedSnippets(prev => [...prev, currentCode]);
+      setAutoSendPrompt("I've got this solution working, but I want to optimize it further. Could you guide me on how to improve its time and space complexity? Please provide a heavily commented optimized version so I can understand exactly how the optimization is done.");
+      if (isDocked) {
+        setActiveTab('ai');
+      } else {
+        setIsChatOpen(true);
+      }
     }
   };
 
@@ -441,6 +455,15 @@ function App() {
               </>
             )}
           </div>
+
+          <button 
+            onClick={handleOptimizeAI}
+            className="bg-secondary/20 hover:bg-secondary/40 text-textMain h-9 px-3 md:px-4 ml-0.5 rounded-lg flex items-center gap-2 transition-colors border border-border/50"
+            title="Guide & Optimize"
+          >
+            <Sparkles size={14} className="text-primary" />
+            <span className="hidden md:inline font-medium text-sm">Optimize</span>
+          </button>
 
           <button 
             onClick={handleRun}
