@@ -357,7 +357,7 @@ async def execute_cpp_code(code: str, test_cases: List[Dict[str, str]]) -> Dict[
                 
                 if run_process.returncode != 0:
                     results.append({
-                        "testCase": index + 1,
+                        "testCaseIndex": index,
                         "passed": False,
                         "output": out_str,
                         "expectedOutput": expected_output,
@@ -366,13 +366,15 @@ async def execute_cpp_code(code: str, test_cases: List[Dict[str, str]]) -> Dict[
                         "memoryUsed": "N/A"
                     })
                 else:
-                    passed = (out_str == expected_output.strip())
+                    expected_stripped = expected_output.strip() if expected_output else ""
+                    passed = (out_str == expected_stripped) if expected_stripped else True
+                    
                     results.append({
-                        "testCase": index + 1,
+                        "testCaseIndex": index,
                         "passed": passed,
                         "output": out_str,
                         "expectedOutput": expected_output,
-                        "error": None if passed else "Output Mismatch",
+                        "error": map_line_numbers(err_str) if err_str else None,
                         "executionTimeMs": round(execution_time),
                         "memoryUsed": "N/A"
                     })
@@ -380,7 +382,7 @@ async def execute_cpp_code(code: str, test_cases: List[Dict[str, str]]) -> Dict[
             except asyncio.TimeoutError:
                 run_process.kill()
                 results.append({
-                    "testCase": index + 1,
+                    "testCaseIndex": index,
                     "passed": False,
                     "output": "",
                     "expectedOutput": expected_output,
