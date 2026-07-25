@@ -226,6 +226,59 @@ do_stop_server_inner() {
     fi
 }
 
+# ─── 4. Setup ──────────────────────────────────────────────────
+do_setup() {
+    banner
+    echo -e "  ${BOLD}Initial System Setup${RESET}"
+    divider
+    echo ""
+    info "This will install Docker, Docker Compose, curl, and Ngrok."
+    warn "This process is designed for Debian/Ubuntu-based systems (apt)."
+    read -rp "  Do you want to proceed? (y/N) " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        return
+    fi
+    echo ""
+    
+    info "Requesting sudo permissions..."
+    sudo -v
+
+    # 1. Update & Install Prerequisites
+    info "Installing prerequisites..."
+    sudo apt-get update -y
+    sudo apt-get install -y ca-certificates curl gnupg lsb-release
+
+    # 2. Install Docker
+    if ! command -v docker &> /dev/null; then
+        info "Installing Docker..."
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sudo sh get-docker.sh
+        rm get-docker.sh
+        sudo usermod -aG docker "$USER"
+        success "Docker installed! (You may need to log out/in to use it without sudo)"
+    else
+        success "Docker is already installed."
+    fi
+
+    # 3. Install Ngrok
+    if ! command -v ngrok &> /dev/null; then
+        info "Installing Ngrok..."
+        curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
+            | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+        echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
+            | sudo tee /etc/apt/sources.list.d/ngrok.list >/dev/null
+        sudo apt-get update -y
+        sudo apt-get install -y ngrok
+        success "Ngrok installed!"
+    else
+        success "Ngrok is already installed."
+    fi
+    
+    echo ""
+    success "Setup complete! Note: You must log out and log back in for Docker group changes to apply."
+    press_enter
+}
+
 # ─── Main Menu ───────────────────────────────────────────────
 main_menu() {
     while true; do
@@ -241,6 +294,7 @@ main_menu() {
         echo -e "  ${CYAN}2${RESET})  ${BOLD}Stop${RESET}              Shut down services"
         echo -e "  ${CYAN}3${RESET})  ${BOLD}Status${RESET}            View detailed status and URLs"
         echo -e "  ${CYAN}4${RESET})  ${BOLD}Rebuild${RESET}           Force rebuild of the Docker image"
+        echo -e "  ${CYAN}5${RESET})  ${BOLD}Setup${RESET}             Install dependencies on a new system (Ubuntu/Debian)"
         echo ""
         echo -e "  ${CYAN}0${RESET})  ${DIM}Exit${RESET}"
         echo ""
@@ -251,6 +305,7 @@ main_menu() {
             2) stop_menu ;;
             3) show_status ;;
             4) do_rebuild ;;
+            5) do_setup ;;
             0) echo "" && echo -e "  ${DIM}Goodbye! ☕${RESET}" && echo "" && exit 0 ;;
             *) warn "Invalid option." && sleep 1 ;;
         esac
