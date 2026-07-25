@@ -89,9 +89,24 @@ async def api_chat(req: ChatRequest):
         # Build dynamic context
         context_str = f"\n\n--- DYNAMIC CONTEXT ---\nUSER IS CURRENTLY IN: {req.chatMode.upper()} MODE\n"
         if req.chatMode == "help":
-            context_str += "MODE RULES (HELP MODE):\n1. Focus on explanations, debugging guidance, logic analysis, and hints.\n2. Do NOT generate full code solutions or complete replacement code blocks.\n3. Keep code snippets minimal (at most 1-3 illustrative pseudo-code or partial lines) and guide the user to write the fix themselves.\n"
+            context_str += (
+                "\nCRITICAL OPERATIONAL MODE: HELP MODE (TUTOR MODE)\n"
+                "In HELP MODE, your role is to act strictly as a Socratic programming tutor.\n"
+                "STRICT RULES:\n"
+                "1. ABSOLUTELY DO NOT generate full code solutions, complete functions, or copy-pasteable code blocks.\n"
+                "2. DO NOT output ```code blocks``` containing full solution implementations.\n"
+                "3. Focus on conceptual explanations, step-by-step hints, pointing out logical errors, and asking guiding questions.\n"
+                "4. Use plain text, bullet points, or short inline code (e.g. `i++`) to explain ideas.\n"
+                "5. Guide the user so they write and fix the code themselves.\n"
+            )
         elif req.chatMode == "code":
-            context_str += "MODE RULES (CODE MODE):\n1. Provide direct, complete, and production-ready code solutions.\n2. Keep textual explanations minimal and focus on providing clean code snippets.\n"
+            context_str += (
+                "\nCRITICAL OPERATIONAL MODE: CODE MODE (SOLUTION MODE)\n"
+                "In CODE MODE, your role is to act as an expert code generator.\n"
+                "STRICT RULES:\n"
+                "1. Provide direct, complete, and production-ready code solutions inside proper markdown ```code blocks```.\n"
+                "2. Keep textual explanations brief and let the clean code speak for itself.\n"
+            )
         
         if req.problemDescription:
             context_str += f"\nPROBLEM DESCRIPTION:\n{req.problemDescription}\n"
