@@ -257,10 +257,10 @@ function App() {
           testCases: res.data.test_cases
         };
 
-        if (language === 'java' && res.data.starting_code_java) {
+        if (res.data.starting_code_java) {
           updates.javaCode = res.data.starting_code_java;
         }
-        if (language === 'cpp' && res.data.starting_code_cpp) {
+        if (res.data.starting_code_cpp) {
           updates.cppCode = res.data.starting_code_cpp;
         }
         if (res.data.description_html) {
