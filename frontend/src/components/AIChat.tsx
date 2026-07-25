@@ -217,11 +217,11 @@ function ChatInnerContent({
     attachedSnippets, setAttachedSnippets,
     messages, setMessages,
     problemDescription, editorRef, language,
-    autoSendPrompt, setAutoSendPrompt, isDocked
+    autoSendPrompt, setAutoSendPrompt, isDocked,
+    isGenerating, setIsGenerating
   } = useAIChat();
 
   const [inputMessage, setInputMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
@@ -273,7 +273,7 @@ function ChatInnerContent({
     const currentMessages = [...messages.map(m => ({...m})), newUserMsg];
     setMessages(currentMessages);
     setInputMessage('');
-    setIsSending(true);
+    setIsGenerating(true);
     setIsWaiting(true);
 
     try {
@@ -383,7 +383,7 @@ function ChatInnerContent({
         return [...prev, { role: 'assistant', content: `Error: ${e.message}` }];
       });
     } finally {
-      setIsSending(false);
+      setIsGenerating(false);
     }
   };
 
@@ -638,16 +638,16 @@ function ChatInnerContent({
                   <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 rounded-[24px] p-1.5 pl-4 pr-1.5 border border-border focus-within:border-primary/50 transition-colors shadow-inner">
                     <input 
                       type="text" 
-                      placeholder={isSending ? "Wait for response..." : "Ask anything"}
+                      placeholder={isGenerating ? "Wait for response..." : "Ask anything"}
                       value={inputMessage}
                       onChange={e => setInputMessage(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && !isSending && handleSendMessage()}
-                      disabled={isSending}
+                      onKeyDown={e => e.key === 'Enter' && !isGenerating && handleSendMessage()}
+                      disabled={isGenerating}
                       className="flex-1 bg-transparent border-none focus:outline-none text-sm text-textMain placeholder-textMuted/70 py-1 disabled:opacity-50"
                     />
                     <button 
                       onClick={() => handleSendMessage()}
-                      disabled={isSending}
+                      disabled={isGenerating}
                       className="w-8 h-8 rounded-full bg-primary text-white dark:text-[#1a2e60] flex items-center justify-center hover:scale-105 transition-transform shadow-md disabled:opacity-50"
                     >
                       <Send size={14} className="ml-[-2px]" />

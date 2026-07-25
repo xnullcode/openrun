@@ -61,6 +61,10 @@ interface AIChatContextType {
   // Editor Reference
   editorRef: React.MutableRefObject<any> | null;
   setEditorRef: (ref: React.MutableRefObject<any>) => void;
+
+  // Generation Status
+  isGenerating: boolean;
+  setIsGenerating: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AIChatContext = createContext<AIChatContextType | undefined>(undefined);
@@ -180,6 +184,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [baseUrl, setBaseUrl] = useState(PROVIDERS.openai.defaultBaseUrl);
   const [model, setModel] = useState(PROVIDERS.openai.defaultModel);
   const [apiKey, setApiKey] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   const [chatMode, setChatMode] = useState<AIMode>('help');
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     const saved = localStorage.getItem('openrun_ai_messages');
@@ -247,7 +252,8 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     clipboardSnippets, setClipboardSnippets,
     editorRef, setEditorRef,
     language, setLanguage,
-    autoSendPrompt, setAutoSendPrompt
+    autoSendPrompt, setAutoSendPrompt,
+    isGenerating, setIsGenerating
   };
 
   return <AIChatContext.Provider value={value}>{children}</AIChatContext.Provider>;

@@ -49,7 +49,7 @@ public:
 };`;
 
 function App() {
-  const { isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, problemDescription, setProblemDescription, setMessages: setAIMessages, language, setLanguage, setAutoSendPrompt } = useAIChat();
+  const { isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, problemDescription, setProblemDescription, setMessages: setAIMessages, language, setLanguage, setAutoSendPrompt, isGenerating } = useAIChat();
 
   const [javaCode, setJavaCode] = useState(() => localStorage.getItem('openrun_java_code') || DEFAULT_JAVA_CODE);
   const [cppCode, setCppCode] = useState(() => localStorage.getItem('openrun_cpp_code') || DEFAULT_CPP_CODE);
@@ -107,7 +107,7 @@ function App() {
   };
 
   const handleOptimizeAI = () => {
-    if (!isAIEnabled) return;
+    if (!isAIEnabled || isGenerating) return;
     const currentCode = editorRef?.current?.getValue();
     if (currentCode) {
       setAttachedSnippets(prev => [...prev, currentCode]);
@@ -458,10 +458,11 @@ function App() {
 
           <button 
             onClick={handleOptimizeAI}
-            className="group bg-secondary/20 hover:bg-primary/10 text-textMain h-9 w-9 ml-0.5 rounded-lg flex items-center justify-center transition-colors border border-border/50 hover:border-primary/50"
-            title="Guide & Optimize"
+            disabled={isGenerating}
+            className={`group h-9 w-9 ml-0.5 rounded-lg flex items-center justify-center transition-colors border ${isGenerating ? 'bg-secondary/10 border-border/20 opacity-50 cursor-not-allowed' : 'bg-secondary/20 hover:bg-primary/10 border-border/50 hover:border-primary/50 text-textMain'}`}
+            title={isGenerating ? "AI is busy..." : "Guide & Optimize"}
           >
-            <Sparkles size={16} className="text-primary group-hover:text-blue-400 transition-colors" />
+            <Sparkles size={16} className={`text-primary ${!isGenerating && 'group-hover:text-blue-400 transition-colors'}`} />
           </button>
 
           <button 
@@ -695,10 +696,11 @@ function App() {
         >
           <button
             onClick={handleAskAI}
-            className="flex items-center gap-2 bg-surface border border-border shadow-2xl rounded-full px-3 py-1.5 text-xs font-bold text-textMain hover:bg-secondary hover:opacity-90 transition-all"
+            disabled={isGenerating}
+            className={`flex items-center gap-2 bg-surface border shadow-2xl rounded-full px-3 py-1.5 text-xs font-bold text-textMain transition-all ${isGenerating ? 'opacity-50 border-border/30 cursor-not-allowed' : 'border-border hover:bg-secondary hover:opacity-90'}`}
           >
             <Sparkles size={14} className="text-primary" />
-            Ask AI
+            {isGenerating ? "AI is busy..." : "Ask AI"}
           </button>
         </div>
       )}
