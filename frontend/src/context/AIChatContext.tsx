@@ -26,8 +26,9 @@ export interface TestCase {
 export interface Workspace {
   id: string;
   name: string;
-  language: 'cpp' | 'java';
-  code: string;
+  activeLanguage: 'cpp' | 'java';
+  javaCode: string;
+  cppCode: string;
   url: string;
   problemDescription: any;
   testCases: TestCase[];
@@ -250,7 +251,19 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Migration from old Workspace to new Workspace format
+          return parsed.map(p => ({
+            id: p.id,
+            name: p.name,
+            activeLanguage: p.activeLanguage || p.language || 'cpp',
+            javaCode: p.javaCode !== undefined ? p.javaCode : (p.language === 'java' ? p.code : DEFAULT_JAVA_CODE),
+            cppCode: p.cppCode !== undefined ? p.cppCode : (p.language === 'cpp' ? p.code : DEFAULT_CPP_CODE),
+            url: p.url || '',
+            problemDescription: p.problemDescription || '',
+            testCases: p.testCases || [{ input: '', expectedOutput: '' }]
+          }));
+        }
       } catch (e) {}
     }
     // Fallback to old keys or default
@@ -258,8 +271,9 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       {
         id: '1',
         name: '1',
-        language: (localStorage.getItem('openrun_language') as 'java' | 'cpp') || 'cpp',
-        code: localStorage.getItem('openrun_cpp_code') || DEFAULT_CPP_CODE,
+        activeLanguage: (localStorage.getItem('openrun_language') as 'java' | 'cpp') || 'cpp',
+        javaCode: localStorage.getItem('openrun_java_code') || DEFAULT_JAVA_CODE,
+        cppCode: localStorage.getItem('openrun_cpp_code') || DEFAULT_CPP_CODE,
         url: '',
         problemDescription: localStorage.getItem('openrun_desc') || '',
         testCases: JSON.parse(localStorage.getItem('openrun_testcases') || '[{"input":"","expectedOutput":""}]')
@@ -267,8 +281,9 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       {
         id: '2',
         name: '2',
-        language: 'java',
-        code: localStorage.getItem('openrun_java_code') || DEFAULT_JAVA_CODE,
+        activeLanguage: 'java',
+        javaCode: DEFAULT_JAVA_CODE,
+        cppCode: DEFAULT_CPP_CODE,
         url: '',
         problemDescription: '',
         testCases: [{ input: '', expectedOutput: '' }]
@@ -276,8 +291,9 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       {
         id: '3',
         name: '3',
-        language: 'cpp',
-        code: DEFAULT_CPP_CODE,
+        activeLanguage: 'cpp',
+        javaCode: DEFAULT_JAVA_CODE,
+        cppCode: DEFAULT_CPP_CODE,
         url: '',
         problemDescription: '',
         testCases: [{ input: '', expectedOutput: '' }]

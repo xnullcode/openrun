@@ -345,7 +345,7 @@ function ChatInnerContent({
     let newAttachments: string[] | undefined;
 
     if (attachedSnippets.length > 0) {
-      hiddenContext = "\n\nAttached Code:\n" + attachedSnippets.map(s => "```" + activeWorkspace.language + "\n" + s + "\n```").join("\n");
+      hiddenContext = "\n\nAttached Code:\n" + attachedSnippets.map(s => "```" + activeWorkspace.activeLanguage + "\n" + s + "\n```").join("\n");
       newAttachments = [...attachedSnippets];
       setAttachedSnippets([]);
     }
@@ -376,9 +376,9 @@ function ChatInnerContent({
             content: m.hiddenContext ? `${m.content}${m.hiddenContext}` : m.content
           })),
           problemDescription: activeWorkspace.problemDescription,
-          editorCode: editorRef?.current?.getValue(),
+          editorCode: editorRef?.current?.getValue() || (activeWorkspace.activeLanguage === 'java' ? activeWorkspace.javaCode : activeWorkspace.cppCode),
           chatMode,
-          language: activeWorkspace.language
+          language: activeWorkspace.activeLanguage
         })
       });
       

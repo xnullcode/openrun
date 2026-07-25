@@ -6,7 +6,7 @@ import axios from 'axios';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import Timer from './components/Timer';
 import AIChat, { DockedAIChat } from './components/AIChat';
-import { useAIChat, DEFAULT_CPP_CODE, type TestCase } from './context/AIChatContext';
+import { useAIChat, DEFAULT_CPP_CODE, DEFAULT_JAVA_CODE, type TestCase } from './context/AIChatContext';
 
 interface TestResult {
   testCaseIndex: number;
@@ -24,14 +24,21 @@ function App() {
     isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, 
     setAutoSendPrompt, isGenerating, uiFontSize, setUiFontSize 
   } = useAIChat();
-  const code = activeWorkspace.code;
-  const setCode = (val: string) => updateWorkspace(activeWorkspaceId, { code: val });
+  const language = activeWorkspace.activeLanguage;
+  const code = language === 'java' ? activeWorkspace.javaCode : activeWorkspace.cppCode;
+  
+  const setCode = (val: string) => {
+    if (language === 'java') {
+      updateWorkspace(activeWorkspaceId, { javaCode: val });
+    } else {
+      updateWorkspace(activeWorkspaceId, { cppCode: val });
+    }
+  };
   
   const testCases = activeWorkspace.testCases;
   const setTestCases = (val: TestCase[]) => updateWorkspace(activeWorkspaceId, { testCases: val });
   
-  const language = activeWorkspace.language;
-  const setLanguage = (val: 'java' | 'cpp') => updateWorkspace(activeWorkspaceId, { language: val });
+  const setLanguage = (val: 'java' | 'cpp') => updateWorkspace(activeWorkspaceId, { activeLanguage: val });
   
   const scrapeUrl = activeWorkspace.url;
   const setScrapeUrl = (val: string) => updateWorkspace(activeWorkspaceId, { url: val });
@@ -244,10 +251,10 @@ function App() {
         };
 
         if (language === 'java' && res.data.starting_code_java) {
-          updates.code = res.data.starting_code_java;
+          updates.javaCode = res.data.starting_code_java;
         }
         if (language === 'cpp' && res.data.starting_code_cpp) {
-          updates.code = res.data.starting_code_cpp;
+          updates.cppCode = res.data.starting_code_cpp;
         }
         if (res.data.description_html) {
           updates.problemDescription = res.data.description_html;
@@ -350,8 +357,9 @@ function App() {
               setWorkspaces([...workspaces, {
                 id: newId,
                 name: newName,
-                language: 'cpp',
-                code: DEFAULT_CPP_CODE,
+                activeLanguage: 'cpp',
+                javaCode: DEFAULT_JAVA_CODE,
+                cppCode: DEFAULT_CPP_CODE,
                 url: '',
                 problemDescription: '',
                 testCases: [{ input: '', expectedOutput: '' }]
