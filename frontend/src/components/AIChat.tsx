@@ -239,7 +239,7 @@ function ChatInnerContent({
 
   useEffect(() => {
     if (isWaiting) {
-      lastMessageRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [isWaiting]);
 

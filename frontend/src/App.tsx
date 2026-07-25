@@ -111,7 +111,7 @@ function App() {
     const currentCode = editorRef?.current?.getValue();
     if (currentCode) {
       setAttachedSnippets(prev => [...prev, currentCode]);
-      setAutoSendPrompt("I've got this solution working, but I want to optimize it further. Could you guide me on how to improve its time and space complexity? Please provide a heavily commented optimized version so I can understand exactly how the optimization is done.");
+      setAutoSendPrompt("I've got this solution working, but I want to optimize it further. Could you guide me on how to improve its time and space complexity? Please provide a heavily commented optimized version so I can understand exactly how the optimization is done.\n\nCRITICAL: Do NOT generate any `main` class, `main` object, or `int main()` function. Please provide ONLY the raw solution class/function logic!");
       if (isDocked) {
         setActiveTab('ai');
       } else {
@@ -458,11 +458,10 @@ function App() {
 
           <button 
             onClick={handleOptimizeAI}
-            className="bg-secondary/20 hover:bg-secondary/40 text-textMain h-9 px-3 md:px-4 ml-0.5 rounded-lg flex items-center gap-2 transition-colors border border-border/50"
+            className="group bg-secondary/20 hover:bg-primary/10 text-textMain h-9 w-9 ml-0.5 rounded-lg flex items-center justify-center transition-colors border border-border/50 hover:border-primary/50"
             title="Guide & Optimize"
           >
-            <Sparkles size={14} className="text-primary" />
-            <span className="hidden md:inline font-medium text-sm">Optimize</span>
+            <Sparkles size={16} className="text-primary group-hover:text-blue-400 transition-colors" />
           </button>
 
           <button 
