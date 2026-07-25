@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect, memo } from 'react';
 import { Rnd } from 'react-rnd';
 import { Sparkles, X, Send, Settings, Save, Pin, Trash2, PanelRightClose, PanelLeft, ChevronDown, Check, Copy, ClipboardPaste } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { useAIChat, type AIProvider, type ChatMessage, PROVIDERS } from '../context/AIChatContext';
 
 let savedChatScrollPosition: number | null = null;
@@ -181,49 +184,48 @@ function formatMath(math: string): string {
 }
 
 const InlineMarkdown = memo(function InlineMarkdown({ text }: { text: string }) {
-  // Escape HTML
-  let html = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
+  // Preprocess text for math equations
   // Handle LaTeX math expressions $$...$$ and $...$
-  html = html.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => formatMath(math));
-  html = html.replace(/\$([^\$\n]+)\$/g, (_, math) => formatMath(math));
+  let processedText = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => formatMath(math));
+  processedText = processedText.replace(/\$([^\$\n]+)\$/g, (_, math) => formatMath(math));
 
-  // Horizontal Rule (---, ***, ___)
-  html = html.replace(/^(?:---|___|\*\*\*)\s*$/gm, '<hr class="my-3 border-t border-border/60" />');
-
-  // Bold **text**
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  // Italic *text*
-  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  // Inline code `code`
-  html = html.replace(/`(.*?)`/g, '<code class="bg-black/10 dark:bg-white/15 px-1.5 py-0.5 rounded font-mono text-[12px]">$1</code>');
-
-  // Bullet lists
-  html = html.replace(/^(?:\*|-)(?!\*)(?!\*)\s+(.*?)$/gm, '<li class="ml-4 list-disc my-0.5">$1</li>');
-  // Numbered lists
-  html = html.replace(/^(\d+)\.\s+(.*?)$/gm, '<li class="ml-4 list-decimal my-0.5">$2</li>');
-
-  // Headers (h1, h2, h3, h4)
-  html = html.replace(/^####\s+(.*?)$/gm, '<h4 class="font-bold text-base mt-3 mb-1">$1</h4>');
-  html = html.replace(/^###\s+(.*?)$/gm, '<h3 class="font-bold text-lg mt-3.5 mb-1">$1</h3>');
-  html = html.replace(/^##\s+(.*?)$/gm, '<h2 class="font-bold text-xl mt-4 mb-1.5">$1</h2>');
-  html = html.replace(/^#\s+(.*?)$/gm, '<h1 class="font-bold text-2xl mt-4 mb-1.5">$1</h1>');
-
-  // Split into clean paragraphs to avoid pre-wrap whitespace bugs
-  const paragraphs = html.split(/\n{2,}/);
-  const formatted = paragraphs.map(p => {
-    const trimmed = p.trim();
-    if (!trimmed) return '';
-    if (/^\s*<(h[1-4]|li|hr|div|p)/i.test(trimmed)) {
-      return trimmed;
-    }
-    return `<p class="my-1.5 leading-relaxed">${trimmed.replace(/\n/g, '<br />')}</p>`;
-  }).join('');
-
-  return <span dangerouslySetInnerHTML={{ __html: formatted }} />;
+  return (
+    <div className="react-markdown-body">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
+        components={{
+          table: ({node, ...props}) => <div className="overflow-x-auto my-3"><table className="border-collapse border border-border/60 w-full text-sm" {...props} /></div>,
+          th: ({node, ...props}) => <th className="border border-border/60 bg-black/5 dark:bg-white/5 px-3 py-2 text-left font-semibold" {...props} />,
+          td: ({node, ...props}) => <td className="border border-border/60 px-3 py-2" {...props} />,
+          ul: ({node, ...props}) => <ul className="list-disc ml-5 my-2 marker:text-textMuted" {...props} />,
+          ol: ({node, ...props}) => <ol className="list-decimal ml-5 my-2 marker:text-textMuted" {...props} />,
+          li: ({node, ...props}) => <li className="my-1 pl-1 leading-relaxed" {...props} />,
+          h1: ({node, ...props}) => <h1 className="font-bold text-2xl mt-5 mb-3" {...props} />,
+          h2: ({node, ...props}) => <h2 className="font-bold text-xl mt-5 mb-3" {...props} />,
+          h3: ({node, ...props}) => <h3 className="font-bold text-lg mt-4 mb-2" {...props} />,
+          h4: ({node, ...props}) => <h4 className="font-bold text-base mt-4 mb-2" {...props} />,
+          p: ({node, ...props}) => <p className="my-2 leading-relaxed" {...props} />,
+          hr: ({node, ...props}) => <hr className="my-4 border-t border-border/60" {...props} />,
+          a: ({node, ...props}) => <a className="text-blue-500 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+          code: ({node, className, children, ...props}: any) => {
+            const isInline = !className;
+            return isInline ? (
+              <code className="bg-black/10 dark:bg-white/15 px-1.5 py-0.5 rounded-md font-mono text-[13px]" {...props}>
+                {children}
+              </code>
+            ) : (
+              <code className={className} {...props}>
+                {children}
+              </code>
+            );
+          }
+        }}
+      >
+        {processedText}
+      </ReactMarkdown>
+    </div>
+  );
 });
 
 function ModelSelector({ provider, model, setModel }: { provider: string, model: string, setModel: (m: string) => void }) {
