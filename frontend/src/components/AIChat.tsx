@@ -3,19 +3,22 @@ import { Rnd } from 'react-rnd';
 import { Sparkles, X, Send, Settings, Save, Pin, Trash2, PanelRightClose, PanelLeft, ChevronDown, Check, Copy, ClipboardPaste } from 'lucide-react';
 import { useAIChat, type AIProvider, PROVIDERS } from '../context/AIChatContext';
 
-// Java syntax highlighting keywords
-const JAVA_KEYWORDS = new Set([
+// Java and C++ syntax highlighting keywords
+const CODE_KEYWORDS = new Set([
   'abstract','assert','boolean','break','byte','case','catch','char','class','const',
   'continue','default','do','double','else','enum','extends','final','finally','float',
   'for','goto','if','implements','import','instanceof','int','interface','long','native',
   'new','package','private','protected','public','return','short','static','strictfp',
   'super','switch','synchronized','this','throw','throws','transient','try','void',
   'volatile','while','true','false','null','var','String','System','Scanner','Arrays',
-  'List','Map','Set','ArrayList','HashMap','HashSet','LinkedList','Collections','Math'
+  'List','Map','Set','ArrayList','HashMap','HashSet','LinkedList','Collections','Math',
+  'auto','bool','cin','cout','endl','namespace','std','vector','string','include',
+  'using','struct','template','typename','virtual','friend','inline','constexpr',
+  'decltype','noexcept','nullptr','sizeof','typedef','union','unsigned','signed'
 ]);
 
-function highlightJava(code: string) {
-  // Tokenize and highlight Java code
+function highlightCode(code: string) {
+  // Tokenize and highlight code
   const escaped = code
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -30,12 +33,12 @@ function highlightJava(code: string) {
     .replace(/\b(\d+\.?\d*[fFdDlL]?)\b(?![^<]*>)/g, '<span class="text-orange-300">$1</span>');
   
   // Keywords
-  JAVA_KEYWORDS.forEach(kw => {
+  CODE_KEYWORDS.forEach(kw => {
     result = result.replace(
       new RegExp(`\\b(${kw})\\b(?![^<]*>)`, 'g'),
       (match) => {
-        if (['true','false','null'].includes(match)) return `<span class="text-orange-300">${match}</span>`;
-        if (['String','System','Scanner','Arrays','List','Map','Set','ArrayList','HashMap','HashSet','LinkedList','Collections','Math'].includes(match))
+        if (['true','false','null','nullptr'].includes(match)) return `<span class="text-orange-300">${match}</span>`;
+        if (['String','System','Scanner','Arrays','List','Map','Set','ArrayList','HashMap','HashSet','LinkedList','Collections','Math','std','vector','string','cout','cin','endl'].includes(match))
           return `<span class="text-cyan-300">${match}</span>`;
         return `<span class="text-purple-400">${match}</span>`;
       }
@@ -61,7 +64,7 @@ function CodeBlock({ code, language, editorRef }: { code: string; language: stri
   };
 
   const isJava = !language || language === 'java' || language === 'Java';
-  const highlighted = isJava ? highlightJava(code) : code
+  const highlighted = (isJava || language === 'cpp') ? highlightCode(code) : code
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
@@ -203,7 +206,7 @@ function ChatInnerContent({
     chatMode, setChatMode,
     attachedSnippets, setAttachedSnippets,
     messages, setMessages,
-    problemDescription, editorRef
+    problemDescription, editorRef, language
   } = useAIChat();
 
   const [inputMessage, setInputMessage] = useState('');
@@ -241,7 +244,8 @@ function ChatInnerContent({
           messages: currentMessages,
           problemDescription,
           editorCode: editorRef?.current?.getValue(),
-          chatMode
+          chatMode,
+          language
         })
       });
       

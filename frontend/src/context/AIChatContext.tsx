@@ -41,6 +41,8 @@ interface AIChatContextType {
   // Visibility
   isChatOpen: boolean;
   setIsChatOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  language: 'java' | 'cpp';
+  setLanguage: React.Dispatch<React.SetStateAction<'java' | 'cpp'>>;
   messages: ChatMessage[];
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
   attachedSnippets: string[];
@@ -163,6 +165,9 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   });
   const [clipboardSnippets, setClipboardSnippets] = useState<Snippet[]>([]);
   const [editorRef, setEditorRef] = useState<React.MutableRefObject<any> | null>(null);
+  const [language, setLanguage] = useState<'java' | 'cpp'>(() => {
+    return (localStorage.getItem('openrun_language') as 'java' | 'cpp') || 'java';
+  });
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -184,6 +189,10 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     if (storedKey) setApiKey(storedKey);
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem('openrun_language', language);
+  }, [language]);
+
   const value = {
     isAIEnabled, setIsAIEnabled,
     isChatOpen, setIsChatOpen,
@@ -197,7 +206,8 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     attachedSnippets, setAttachedSnippets,
     problemDescription, setProblemDescription,
     clipboardSnippets, setClipboardSnippets,
-    editorRef, setEditorRef
+    editorRef, setEditorRef,
+    language, setLanguage
   };
 
   return <AIChatContext.Provider value={value}>{children}</AIChatContext.Provider>;

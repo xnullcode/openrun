@@ -40,7 +40,8 @@ async def scrape_problem(url: str) -> Dict[str, Any]:
         description_html = ""
         description_text = ""
         test_cases = []
-        starting_code = ""
+        starting_code_java = ""
+        starting_code_cpp = ""
 
         if is_tuf:
             data = await asyncio.to_thread(fetch_tuf_api, title_slug)
@@ -62,7 +63,8 @@ async def scrape_problem(url: str) -> Dict[str, Any]:
             description_html = content
             description_text = re.sub(r'<[^>]+>', '', content)
             
-            starting_code = prob_data.get('publicJava', '')
+            starting_code_java = prob_data.get('publicJava', '')
+            starting_code_cpp = prob_data.get('publicCpp', prob_data.get('publicC++', prob_data.get('publicCPP', '')))
             
             outputs = []
             for i in range(1, 10):
@@ -103,8 +105,9 @@ async def scrape_problem(url: str) -> Dict[str, Any]:
             snippets = question.get('codeSnippets', [])
             for snip in (snippets or []):
                 if snip.get('langSlug') == 'java':
-                    starting_code = snip.get('code', '')
-                    break
+                    starting_code_java = snip.get('code', '')
+                elif snip.get('langSlug') == 'cpp':
+                    starting_code_cpp = snip.get('code', '')
             
             outputs = []
             for match in re.finditer(r'Output:<\/strong>\s*(.*?)(<|\n)', content):
@@ -130,7 +133,8 @@ async def scrape_problem(url: str) -> Dict[str, Any]:
             "description_html": description_html,
             "description_text": description_text,
             "test_cases": test_cases,
-            "starting_code": starting_code
+            "starting_code_java": starting_code_java,
+            "starting_code_cpp": starting_code_cpp
         }
         
     except Exception as e:

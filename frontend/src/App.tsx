@@ -49,7 +49,14 @@ public:
 };`;
 
 function App() {
-  const [code, setCode] = useState(() => localStorage.getItem('openrun_code') || DEFAULT_JAVA_CODE);
+  const { isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, problemDescription, setProblemDescription, setMessages: setAIMessages, language, setLanguage } = useAIChat();
+
+  const [javaCode, setJavaCode] = useState(() => localStorage.getItem('openrun_java_code') || DEFAULT_JAVA_CODE);
+  const [cppCode, setCppCode] = useState(() => localStorage.getItem('openrun_cpp_code') || DEFAULT_CPP_CODE);
+  
+  const code = language === 'java' ? javaCode : cppCode;
+  const setCode = (val: string) => language === 'java' ? setJavaCode(val) : setCppCode(val);
+
   const [testCases, setTestCases] = useState<TestCase[]>(() => {
     const saved = localStorage.getItem('openrun_testcases');
     return saved ? JSON.parse(saved) : [{ input: '', expectedOutput: '' }];
@@ -57,11 +64,6 @@ function App() {
   const [results, setResults] = useState<TestResult[]>([]);
   const [activeTab, setActiveTab] = useState<'description' | 'tests' | 'results' | 'ai'>('description');
   const [activeCaseIndex, setActiveCaseIndex] = useState(0);
-  const [language, setLanguage] = useState<'java' | 'cpp'>(() => {
-    return (localStorage.getItem('openrun_language') as 'java' | 'cpp') || 'java';
-  });
-  
-  const { isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, problemDescription, setProblemDescription, setMessages: setAIMessages } = useAIChat();
   const editorRef = useRef<any>(null);
 
   const [selectionPopup, setSelectionPopup] = useState<{ x: number, y: number, text: string } | null>(null);
@@ -152,9 +154,11 @@ function App() {
 
   const handleReset = () => {
     if (window.confirm("Are you sure you want to reset all code, test cases, and settings? This cannot be undone.")) {
-      localStorage.removeItem('openrun_code');
+      localStorage.removeItem('openrun_java_code');
+      localStorage.removeItem('openrun_cpp_code');
       localStorage.removeItem('openrun_testcases');
-      setCode(language === 'cpp' ? DEFAULT_CPP_CODE : DEFAULT_JAVA_CODE);
+      setJavaCode(DEFAULT_JAVA_CODE);
+      setCppCode(DEFAULT_CPP_CODE);
       setTestCases([{ input: '', expectedOutput: '' }]);
       setResults([]);
       setActiveTab('tests');
@@ -168,16 +172,18 @@ function App() {
   };
 
   useEffect(() => {
-    localStorage.setItem('openrun_code', code);
-  }, [code]);
+    localStorage.setItem('openrun_java_code', javaCode);
+  }, [javaCode]);
+
+  useEffect(() => {
+    localStorage.setItem('openrun_cpp_code', cppCode);
+  }, [cppCode]);
 
   useEffect(() => {
     localStorage.setItem('openrun_testcases', JSON.stringify(testCases));
   }, [testCases]);
 
-  useEffect(() => {
-    localStorage.setItem('openrun_language', language);
-  }, [language]);
+
 
   useEffect(() => {
     localStorage.setItem('openrun_desc', problemDescription);
@@ -215,8 +221,11 @@ function App() {
       const res = await axios.post('/api/scrape', { url: scrapeUrl });
       if (res.data.success && res.data.test_cases && res.data.test_cases.length > 0) {
         setTestCases(res.data.test_cases);
-        if (res.data.starting_code) {
-          setCode(res.data.starting_code);
+        if (res.data.starting_code_java) {
+          setJavaCode(res.data.starting_code_java);
+        }
+        if (res.data.starting_code_cpp) {
+          setCppCode(res.data.starting_code_cpp);
         }
         if (res.data.description_html) {
           setProblemDescription(res.data.description_html);
@@ -284,30 +293,16 @@ function App() {
       <div className="h-10 bg-surface border-b border-border flex items-center justify-between px-4 text-sm font-medium text-textMuted shrink-0">
         <div className="flex items-center gap-1 bg-secondary p-1 rounded-md border border-border/50">
           <button 
-            onClick={() => {
-              if (language !== 'java') {
-                setLanguage('java');
-                if (code.trim() === DEFAULT_CPP_CODE.trim() || code.trim() === '') {
-                  setCode(DEFAULT_JAVA_CODE);
-                }
-              }
-            }}
+            onClick={() => setLanguage('java')}
             className={`px-3 py-1 rounded-sm text-xs font-bold transition-all ${language === 'java' ? 'bg-primary text-white dark:text-[#1a2e60] shadow-sm' : 'text-textMuted hover:text-textMain'}`}
           >
-            Solution.java
+            Java
           </button>
           <button 
-            onClick={() => {
-              if (language !== 'cpp') {
-                setLanguage('cpp');
-                if (code.trim() === DEFAULT_JAVA_CODE.trim() || code.trim() === '') {
-                  setCode(DEFAULT_CPP_CODE);
-                }
-              }
-            }}
+            onClick={() => setLanguage('cpp')}
             className={`px-3 py-1 rounded-sm text-xs font-bold transition-all ${language === 'cpp' ? 'bg-primary text-white dark:text-[#1a2e60] shadow-sm' : 'text-textMuted hover:text-textMain'}`}
           >
-            Solution.cpp
+            C++
           </button>
         </div>
         <div className="flex items-center gap-1.5 bg-secondary px-2 py-1 rounded-md">

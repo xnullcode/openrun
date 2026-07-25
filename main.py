@@ -36,6 +36,7 @@ class ChatRequest(BaseModel):
     problemDescription: Optional[str] = None
     editorCode: Optional[str] = None
     chatMode: Optional[str] = "help"
+    language: Optional[str] = "java"
 
 @app.post("/api/execute")
 async def api_execute(req: ExecuteRequest):
@@ -92,7 +93,7 @@ async def api_chat(req: ChatRequest):
             context_str += f"\nPROBLEM DESCRIPTION:\n{req.problemDescription}\n"
             
         if req.editorCode:
-            context_str += f"\nCURRENT EDITOR CODE:\n```java\n{req.editorCode}\n```\n"
+            context_str += f"\nCURRENT EDITOR CODE:\n```{req.language}\n{req.editorCode}\n```\n"
 
         final_system_prompt = system_prompt + context_str
 
