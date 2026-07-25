@@ -161,6 +161,25 @@ function MarkdownRenderer({ text, editorRef }: { text: string; editorRef: React.
   return <>{parts}</>;
 }
 
+function formatMath(math: string): string {
+  let cleaned = math
+    .replace(/\\log/g, 'log')
+    .replace(/\\ln/g, 'ln')
+    .replace(/\\le/g, '≤')
+    .replace(/\\ge/g, '≥')
+    .replace(/\\times/g, '×')
+    .replace(/\\neq/g, '≠')
+    .replace(/\\infty/g, '∞')
+    .replace(/\\cdot/g, '·')
+    .replace(/\^2/g, '²')
+    .replace(/\^3/g, '³')
+    .replace(/\^n/g, 'ⁿ')
+    .replace(/\^\{([^}]+)\}/g, '^($1)')
+    .replace(/_\{([^}]+)\}/g, '_($1)');
+
+  return `<code class="bg-primary/15 text-primary px-1.5 py-0.5 rounded font-mono text-[12px]">${cleaned}</code>`;
+}
+
 function InlineMarkdown({ text }: { text: string }) {
   // Escape HTML
   let html = text
@@ -168,12 +187,12 @@ function InlineMarkdown({ text }: { text: string }) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-  // Handle LaTeX math expressions $...$ and $$...$$
-  html = html.replace(/\$\$(.*?)\$\$/g, '<code class="bg-primary/15 text-primary px-1.5 py-0.5 rounded font-mono text-[12px]">$1</code>');
-  html = html.replace(/\$(.*?)\$/g, '<code class="bg-primary/15 text-primary px-1.5 py-0.5 rounded font-mono text-[12px]">$1</code>');
+  // Handle LaTeX math expressions $$...$$ and $...$
+  html = html.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => formatMath(math));
+  html = html.replace(/\$([^\$\n]+)\$/g, (_, math) => formatMath(math));
 
   // Horizontal Rule (---, ***, ___)
-  html = html.replace(/^(?:---|___|\*\*\*)\s*$/gm, '<hr class="my-2.5 border-t border-border/60" />');
+  html = html.replace(/^(?:---|___|\*\*\*)\s*$/gm, '<hr class="my-3 border-t border-border/60" />');
 
   // Bold **text**
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
@@ -188,17 +207,23 @@ function InlineMarkdown({ text }: { text: string }) {
   html = html.replace(/^(\d+)\.\s+(.*?)$/gm, '<li class="ml-4 list-decimal my-0.5">$2</li>');
 
   // Headers (h1, h2, h3, h4)
-  html = html.replace(/^####\s+(.*?)$/gm, '<h4 class="font-bold text-base mt-2 mb-0.5">$1</h4>');
-  html = html.replace(/^###\s+(.*?)$/gm, '<h3 class="font-bold text-lg mt-2.5 mb-1">$1</h3>');
-  html = html.replace(/^##\s+(.*?)$/gm, '<h2 class="font-bold text-xl mt-3 mb-1">$1</h2>');
-  html = html.replace(/^#\s+(.*?)$/gm, '<h1 class="font-bold text-2xl mt-3 mb-1">$1</h1>');
+  html = html.replace(/^####\s+(.*?)$/gm, '<h4 class="font-bold text-base mt-3 mb-1">$1</h4>');
+  html = html.replace(/^###\s+(.*?)$/gm, '<h3 class="font-bold text-lg mt-3.5 mb-1">$1</h3>');
+  html = html.replace(/^##\s+(.*?)$/gm, '<h2 class="font-bold text-xl mt-4 mb-1.5">$1</h2>');
+  html = html.replace(/^#\s+(.*?)$/gm, '<h1 class="font-bold text-2xl mt-4 mb-1.5">$1</h1>');
 
-  // Tighten vertical gaps around block tags for pre-wrap
-  html = html.replace(/\n+(<h[1-4]|<li|<hr)/g, '$1');
-  html = html.replace(/(<\/h[1-4]>|<\/li>|<hr\s*\/?>)\n+/g, '$1');
-  html = html.replace(/\n{3,}/g, '\n\n');
+  // Split into clean paragraphs to avoid pre-wrap whitespace bugs
+  const paragraphs = html.split(/\n{2,}/);
+  const formatted = paragraphs.map(p => {
+    const trimmed = p.trim();
+    if (!trimmed) return '';
+    if (/^\s*<(h[1-4]|li|hr|div|p)/i.test(trimmed)) {
+      return trimmed;
+    }
+    return `<p class="my-1.5 leading-relaxed">${trimmed.replace(/\n/g, '<br />')}</p>`;
+  }).join('');
 
-  return <span dangerouslySetInnerHTML={{ __html: html }} />;
+  return <span dangerouslySetInnerHTML={{ __html: formatted }} />;
 }
 
 function ModelSelector({ provider, model, setModel }: { provider: string, model: string, setModel: (m: string) => void }) {
@@ -674,7 +699,7 @@ function ChatInnerContent({
                       )}
                       
                       <div className={`${m.role === 'user' ? 'bg-primary text-white dark:text-[#1a2e60] self-end rounded-tr-sm' : 'bg-secondary text-textMain self-start rounded-tl-sm'} rounded-2xl p-4 shadow-sm flex items-start gap-3 w-full`}>
-                        <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans min-w-0 w-full break-words">
+                        <div className="text-sm leading-relaxed whitespace-normal font-sans min-w-0 w-full break-words">
                           <MarkdownRenderer text={m.content} editorRef={editorRef} />
                         </div>
                       </div>
