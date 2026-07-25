@@ -139,7 +139,12 @@ function InlineMarkdown({ text }: { text: string }) {
   html = html.replace(/^(?:\*|-)(?!\*)(?!\*)\s+(.*?)$/gm, '<li class="ml-5 list-disc my-0.5">$1</li>');
   // Numbered lists
   html = html.replace(/^(\d+)\.\s+(.*?)$/gm, '<li class="ml-5 list-decimal my-0.5">$2</li>');
-
+  // Headers (h1, h2, h3, h4)
+  html = html.replace(/^####\s+(.*?)$/gm, '<h4 class="font-bold text-base mt-3 mb-1">$1</h4>');
+  html = html.replace(/^###\s+(.*?)$/gm, '<h3 class="font-bold text-lg mt-3 mb-1">$1</h3>');
+  html = html.replace(/^##\s+(.*?)$/gm, '<h2 class="font-bold text-xl mt-4 mb-2">$1</h2>');
+  html = html.replace(/^#\s+(.*?)$/gm, '<h1 class="font-bold text-2xl mt-4 mb-2">$1</h1>');
+  
   return <span dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
@@ -246,7 +251,7 @@ function ChatInnerContent({
     
     let content = inputMessage;
     if (attachedSnippets.length > 0) {
-      content += "\n\nAttached Code:\n" + attachedSnippets.map(s => "```\n" + s + "\n```").join("\n");
+      content += "\n\nAttached Code:\n" + attachedSnippets.map(s => "```" + language + "\n" + s + "\n```").join("\n");
       setAttachedSnippets([]);
     }
     
@@ -568,7 +573,7 @@ function ChatInnerContent({
                   return (
                     <div ref={idx === messages.length - 1 ? lastMessageRef : null} key={idx} className={`${m.role === 'user' ? 'bg-primary text-white dark:text-[#1a2e60] self-end rounded-tr-sm' : 'bg-secondary text-textMain self-start rounded-tl-sm'} rounded-2xl p-4 max-w-[90%] shadow-sm flex items-start gap-3`}>
                       <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans min-w-0 w-full break-words">
-                        {m.role === 'assistant' ? <MarkdownRenderer text={m.content} editorRef={editorRef} /> : m.content}
+                        <MarkdownRenderer text={m.content} editorRef={editorRef} />
                       </div>
                     </div>
                   );
