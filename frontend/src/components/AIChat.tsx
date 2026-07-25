@@ -213,10 +213,11 @@ function ChatInnerContent({
   const [isSending, setIsSending] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isWaiting) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      lastMessageRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [isWaiting]);
 
@@ -535,7 +536,7 @@ function ChatInnerContent({
                 {messages.map((m, idx) => {
                   if (m.role === 'system_alert') {
                     return (
-                      <div key={idx} className="flex justify-center my-1">
+                      <div ref={idx === messages.length - 1 ? lastMessageRef : null} key={idx} className="flex justify-center my-1">
                         <span className="text-[11px] font-medium text-textMuted bg-secondary/50 px-3 py-1 rounded-full border border-border/50">
                           {m.content}
                         </span>
@@ -544,7 +545,7 @@ function ChatInnerContent({
                   }
                   
                   return (
-                    <div key={idx} className={`${m.role === 'user' ? 'bg-primary text-white dark:text-[#1a2e60] self-end rounded-tr-sm' : 'bg-secondary text-textMain self-start rounded-tl-sm'} rounded-2xl p-4 max-w-[90%] shadow-sm flex items-start gap-3`}>
+                    <div ref={idx === messages.length - 1 ? lastMessageRef : null} key={idx} className={`${m.role === 'user' ? 'bg-primary text-white dark:text-[#1a2e60] self-end rounded-tr-sm' : 'bg-secondary text-textMain self-start rounded-tl-sm'} rounded-2xl p-4 max-w-[90%] shadow-sm flex items-start gap-3`}>
                       <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans min-w-0 w-full break-words">
                         {m.role === 'assistant' ? <MarkdownRenderer text={m.content} editorRef={editorRef} /> : m.content}
                       </div>
