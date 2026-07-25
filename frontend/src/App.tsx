@@ -291,7 +291,7 @@ function App() {
   const editorPanelContent = (
     <div className="w-full h-full flex flex-col bg-background">
       <div className="h-10 bg-surface border-b border-border flex items-center justify-between px-4 text-sm font-medium text-textMuted shrink-0">
-        <div className="flex items-center gap-1 bg-secondary p-1 rounded-md border border-border/50">
+        <div className="flex items-center gap-1 bg-secondary p-1 rounded-md border border-border">
           <button 
             onClick={() => setLanguage('java')}
             className={`px-3 py-1 rounded-sm text-xs font-bold transition-all ${language === 'java' ? 'bg-primary text-white dark:text-[#1a2e60] shadow-sm' : 'text-textMuted hover:text-textMain'}`}
@@ -354,7 +354,7 @@ function App() {
           <div className="flex-1 flex gap-1 bg-secondary border border-border p-1 rounded-lg">
             <input 
               type="text" 
-              placeholder="Paste LeetCode/TUF URL..." 
+              placeholder="Paste LeetCode/tuf URL" 
               className="bg-transparent border-none text-textMain placeholder:text-textMuted focus:ring-0 text-sm flex-1 px-3 py-1 outline-none min-w-[150px]"
               value={scrapeUrl}
               onChange={e => setScrapeUrl(e.target.value)}

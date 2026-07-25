@@ -211,7 +211,14 @@ function ChatInnerContent({
 
   const [inputMessage, setInputMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [isWaiting, setIsWaiting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isWaiting) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [isWaiting]);
 
 
   const handleSendMessage = async () => {
@@ -228,10 +235,11 @@ function ChatInnerContent({
     }
     
     const newUserMsg = { role: 'user' as const, content };
-    const currentMessages = [...messages, newUserMsg];
+    const currentMessages = [...messages.map(m => ({...m})), newUserMsg];
     setMessages(currentMessages);
     setInputMessage('');
     setIsSending(true);
+    setIsWaiting(true);
 
     try {
       const res = await fetch('/api/chat', {
@@ -255,7 +263,8 @@ function ChatInnerContent({
       }
 
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
-      setIsSending(false); // Disable bouncing dots as soon as stream starts
+      setIsSending(false);
+      setIsWaiting(false);
       
       const reader = res.body?.getReader();
       const decoder = new TextDecoder('utf-8');
@@ -284,11 +293,13 @@ function ChatInnerContent({
                   
                   const content = data.choices?.[0]?.delta?.content;
                   if (content) {
+                    await new Promise(resolve => setTimeout(resolve, 2));
                     setMessages(prev => {
                       const newMsgs = [...prev];
-                      const lastMsg = newMsgs[newMsgs.length - 1];
+                      const lastMsg = { ...newMsgs[newMsgs.length - 1] };
                       if (lastMsg.role === 'assistant') {
                         lastMsg.content += content;
+                        newMsgs[newMsgs.length - 1] = lastMsg;
                       }
                       return newMsgs;
                     });
@@ -354,14 +365,14 @@ function ChatInnerContent({
   };
 
   const handleSaveKey = () => {
-    localStorage.setItem('openrun_ai_key', apiKey);
+    localStorage.setItem(`openrun_ai_key_${provider}`, apiKey);
     localStorage.setItem('openrun_ai_baseUrl', baseUrl);
     localStorage.setItem('openrun_ai_model', model);
     setActiveTab('chat');
   };
 
   const handleClearKey = () => {
-    localStorage.removeItem('openrun_ai_key');
+    localStorage.removeItem(`openrun_ai_key_${provider}`);
     setApiKey('');
   };
 
@@ -441,7 +452,7 @@ function ChatInnerContent({
                 >
                   <Save size={14} /> Save Configuration
                 </button>
-                {localStorage.getItem('openrun_ai_key') && (
+                {localStorage.getItem(`openrun_ai_key_${provider}`) && (
                   <button 
                     onClick={handleClearKey}
                     className="px-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg py-2 text-sm font-semibold transition-colors flex items-center justify-center"
