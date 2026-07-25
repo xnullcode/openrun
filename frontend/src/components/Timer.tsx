@@ -217,6 +217,8 @@ export default function Timer() {
                         onChange={handleHourChange} 
                         className="w-11 h-9 bg-transparent border border-border rounded-lg text-center text-textMain text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
                         onBlur={() => setTimerHours(prev => (prev || '0').padStart(2, '0'))}
+                        onFocus={(e) => e.target.select()}
+                        onKeyDown={(e) => e.key === 'Enter' && handleStart()}
                       />
                       <span className="text-xs text-textMuted">hr</span>
                     </div>
@@ -227,6 +229,8 @@ export default function Timer() {
                         onChange={handleMinuteChange} 
                         className="w-11 h-9 bg-transparent border border-border rounded-lg text-center text-textMain text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors"
                         onBlur={() => setTimerMinutes(prev => (prev || '0').padStart(2, '0'))}
+                        onFocus={(e) => e.target.select()}
+                        onKeyDown={(e) => e.key === 'Enter' && handleStart()}
                       />
                       <span className="text-xs text-textMuted">min</span>
                     </div>
