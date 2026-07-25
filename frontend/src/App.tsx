@@ -338,7 +338,7 @@ function App() {
             <button
               key={w.id}
               onClick={() => setActiveWorkspaceId(w.id)}
-              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200 ${w.id === activeWorkspaceId ? 'bg-primary text-white shadow-md' : 'text-textMuted hover:bg-black/5 dark:hover:bg-white/10 hover:text-textMain'}`}
+              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200 ${w.id === activeWorkspaceId ? 'bg-primary text-white dark:text-[#1a2e60] shadow-md' : 'text-textMuted hover:bg-black/5 dark:hover:bg-white/10 hover:text-textMain'}`}
             >
               {w.name}
             </button>
