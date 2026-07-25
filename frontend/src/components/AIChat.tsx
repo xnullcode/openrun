@@ -68,7 +68,10 @@ function CodeBlock({ code, language, editorRef }: { code: string; language: stri
         selection.startColumn !== selection.endColumn
       );
       
-      const isFullSolution = /class\s+\w+|struct\s+\w+|public\s+class/.test(code);
+      const isFullSolution = (
+        /class\s+Solution\b|struct\s+Solution\b|public\s+class\s+Solution\b/i.test(code) ||
+        /#include\s+<|import\s+java\./.test(code)
+      );
 
       if (hasSelection) {
         editor.executeEdits('ai-apply', [{
