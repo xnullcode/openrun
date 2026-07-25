@@ -168,25 +168,36 @@ function InlineMarkdown({ text }: { text: string }) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
+  // Handle LaTeX math expressions $...$ and $$...$$
+  html = html.replace(/\$\$(.*?)\$\$/g, '<code class="bg-primary/15 text-primary px-1.5 py-0.5 rounded font-mono text-[12px]">$1</code>');
+  html = html.replace(/\$(.*?)\$/g, '<code class="bg-primary/15 text-primary px-1.5 py-0.5 rounded font-mono text-[12px]">$1</code>');
+
+  // Horizontal Rule (---, ***, ___)
+  html = html.replace(/^(?:---|___|\*\*\*)\s*$/gm, '<hr class="my-2.5 border-t border-border/60" />');
+
   // Bold **text**
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   // Italic *text*
   html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
   // Inline code `code`
   html = html.replace(/`(.*?)`/g, '<code class="bg-black/10 dark:bg-white/15 px-1.5 py-0.5 rounded font-mono text-[12px]">$1</code>');
+
   // Bullet lists
-  html = html.replace(/^(?:\*|-)(?!\*)(?!\*)\s+(.*?)$/gm, '<li class="ml-5 list-disc my-0.5">$1</li>');
+  html = html.replace(/^(?:\*|-)(?!\*)(?!\*)\s+(.*?)$/gm, '<li class="ml-4 list-disc my-0.5">$1</li>');
   // Numbered lists
-  html = html.replace(/^(\d+)\.\s+(.*?)$/gm, '<li class="ml-5 list-decimal my-0.5">$2</li>');
+  html = html.replace(/^(\d+)\.\s+(.*?)$/gm, '<li class="ml-4 list-decimal my-0.5">$2</li>');
+
   // Headers (h1, h2, h3, h4)
-  html = html.replace(/^####\s+(.*?)$/gm, '<h4 class="font-bold text-base mt-1 mb-0">$1</h4>');
-  html = html.replace(/^###\s+(.*?)$/gm, '<h3 class="font-bold text-lg mt-1 mb-0">$1</h3>');
-  html = html.replace(/^##\s+(.*?)$/gm, '<h2 class="font-bold text-xl mt-1 mb-1">$1</h2>');
-  html = html.replace(/^#\s+(.*?)$/gm, '<h1 class="font-bold text-2xl mt-2 mb-1">$1</h1>');
-  
-  // Condense excessive newlines to prevent huge vertical gaps in pre-wrap
+  html = html.replace(/^####\s+(.*?)$/gm, '<h4 class="font-bold text-base mt-2 mb-0.5">$1</h4>');
+  html = html.replace(/^###\s+(.*?)$/gm, '<h3 class="font-bold text-lg mt-2.5 mb-1">$1</h3>');
+  html = html.replace(/^##\s+(.*?)$/gm, '<h2 class="font-bold text-xl mt-3 mb-1">$1</h2>');
+  html = html.replace(/^#\s+(.*?)$/gm, '<h1 class="font-bold text-2xl mt-3 mb-1">$1</h1>');
+
+  // Tighten vertical gaps around block tags for pre-wrap
+  html = html.replace(/\n+(<h[1-4]|<li|<hr)/g, '$1');
+  html = html.replace(/(<\/h[1-4]>|<\/li>|<hr\s*\/?>)\n+/g, '$1');
   html = html.replace(/\n{3,}/g, '\n\n');
-  
+
   return <span dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
