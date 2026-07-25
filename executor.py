@@ -58,6 +58,19 @@ def inject_harness(code: str) -> tuple[str, str, int]:
         if (!sc.hasNextLine()) return;
         String {p_name} = sc.nextLine().trim();
         """)
+        elif "List<Integer>" in p_type or "ArrayList<Integer>" in p_type:
+            p_type_actual = "ArrayList<Integer>" if "ArrayList" in p_type else "List<Integer>"
+            parse_blocks.append(f"""
+        if (!sc.hasNextLine()) return;
+        String raw_{p_name} = sc.nextLine().trim();
+        String cleaned_{p_name} = raw_{p_name}.replaceAll("[\\\\[\\\\]\\\\s]", "");
+        {p_type_actual} {p_name} = new ArrayList<>();
+        if (!cleaned_{p_name}.isEmpty()) {{
+            String[] tokens_{p_name} = cleaned_{p_name}.split(",");
+            for (String token : tokens_{p_name}) {{
+                {p_name}.add(Integer.parseInt(token.trim()));
+            }}
+        }}""")
         else:
             parse_blocks.append(f"""
         if (!sc.hasNextLine()) return;
