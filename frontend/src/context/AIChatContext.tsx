@@ -67,6 +67,10 @@ interface AIChatContextType {
   // Generation Status
   isGenerating: boolean;
   setIsGenerating: React.Dispatch<React.SetStateAction<boolean>>;
+
+  // UI Font Size
+  uiFontSize: number;
+  setUiFontSize: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const AIChatContext = createContext<AIChatContextType | undefined>(undefined);
@@ -205,6 +209,9 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return (localStorage.getItem('openrun_language') as 'java' | 'cpp') || 'java';
   });
   const [autoSendPrompt, setAutoSendPrompt] = useState('');
+  const [uiFontSize, setUiFontSize] = useState<number>(() => {
+    return parseInt(localStorage.getItem('openrun_ui_fontsize') || '14');
+  });
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -239,6 +246,10 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     localStorage.setItem('openrun_ai_messages', JSON.stringify(messages));
   }, [messages]);
 
+  useEffect(() => {
+    localStorage.setItem('openrun_ui_fontsize', uiFontSize.toString());
+  }, [uiFontSize]);
+
   const value = {
     isAIEnabled, setIsAIEnabled,
     isChatOpen, setIsChatOpen,
@@ -255,7 +266,8 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     editorRef, setEditorRef,
     language, setLanguage,
     autoSendPrompt, setAutoSendPrompt,
-    isGenerating, setIsGenerating
+    isGenerating, setIsGenerating,
+    uiFontSize, setUiFontSize
   };
 
   return <AIChatContext.Provider value={value}>{children}</AIChatContext.Provider>;

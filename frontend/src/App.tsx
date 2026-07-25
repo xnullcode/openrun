@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
 import Editor from '@monaco-editor/react';
-import { Play, Download, Plus, Minus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows, RotateCcw, Sun, Moon, Settings, BookOpen, Sparkles } from 'lucide-react';
+import { Play, Download, Plus, Minus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows, RotateCcw, Sun, Moon, Settings, BookOpen, Sparkles, Type } from 'lucide-react';
 import axios from 'axios';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import Timer from './components/Timer';
@@ -49,7 +49,7 @@ public:
 };`;
 
 function App() {
-  const { isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, problemDescription, setProblemDescription, setMessages: setAIMessages, language, setLanguage, setAutoSendPrompt, isGenerating } = useAIChat();
+  const { isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, problemDescription, setProblemDescription, setMessages: setAIMessages, language, setLanguage, setAutoSendPrompt, isGenerating, uiFontSize, setUiFontSize } = useAIChat();
 
   const [javaCode, setJavaCode] = useState(() => localStorage.getItem('openrun_java_code') || DEFAULT_JAVA_CODE);
   const [cppCode, setCppCode] = useState(() => localStorage.getItem('openrun_cpp_code') || DEFAULT_CPP_CODE);
@@ -450,6 +450,34 @@ function App() {
                       <span className="font-medium text-sm">AI Chat</span>
                       <span className="text-xs opacity-70">{isAIEnabled ? 'Enabled' : 'Disabled'}</span>
                     </button>
+
+                    {/* Text Font Size Control */}
+                    <div className="col-span-2 flex items-center justify-between p-3.5 rounded-[20px] bg-[#303034] text-white">
+                      <div className="flex items-center gap-2">
+                        <Type size={18} className="text-primary" />
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">Text Font Size</span>
+                          <span className="text-xs opacity-70">Chat & Description</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-black/20 p-1 rounded-xl">
+                        <button 
+                          onClick={() => setUiFontSize(s => Math.max(12, s - 1))}
+                          className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                          title="Decrease Text Font Size"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className="w-5 text-center text-xs font-bold">{uiFontSize}</span>
+                        <button 
+                          onClick={() => setUiFontSize(s => Math.min(22, s + 1))}
+                          className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                          title="Increase Text Font Size"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>
@@ -538,7 +566,7 @@ function App() {
             {/* Pane Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
               {activeTab === 'description' && (
-                <div className="flex-1 p-4 overflow-y-auto custom-scrollbar problem-description text-sm text-textMain">
+                <div className="flex-1 p-4 overflow-y-auto custom-scrollbar problem-description text-sm text-textMain" style={{ fontSize: `${uiFontSize}px` }}>
                   {problemDescription ? (
                     <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(problemDescription) }} />
                   ) : (

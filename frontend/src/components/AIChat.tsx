@@ -293,7 +293,8 @@ function ChatInnerContent({
     messages, setMessages,
     problemDescription, editorRef, language,
     autoSendPrompt, setAutoSendPrompt, isDocked,
-    isGenerating, setIsGenerating
+    isGenerating, setIsGenerating,
+    uiFontSize
   } = useAIChat();
 
   const [inputMessage, setInputMessage] = useState('');
@@ -699,7 +700,7 @@ function ChatInnerContent({
                       )}
                       
                       <div className={`${m.role === 'user' ? 'bg-primary text-white dark:text-[#1a2e60] self-end rounded-tr-sm' : 'bg-secondary text-textMain self-start rounded-tl-sm'} rounded-2xl p-4 shadow-sm flex items-start gap-3 w-full`}>
-                        <div className="text-sm leading-relaxed whitespace-normal font-sans min-w-0 w-full break-words">
+                        <div className="leading-relaxed whitespace-normal font-sans min-w-0 w-full break-words" style={{ fontSize: `${uiFontSize}px` }}>
                           <MarkdownRenderer text={m.content} editorRef={editorRef} />
                         </div>
                       </div>
