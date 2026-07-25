@@ -638,12 +638,11 @@ function ChatInnerContent({
                   <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 rounded-[24px] p-1.5 pl-4 pr-1.5 border border-border focus-within:border-primary/50 transition-colors shadow-inner">
                     <input 
                       type="text" 
-                      placeholder={isGenerating ? "Wait for response..." : "Ask anything"}
+                      placeholder="Ask anything"
                       value={inputMessage}
                       onChange={e => setInputMessage(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && !isGenerating && handleSendMessage()}
-                      disabled={isGenerating}
-                      className="flex-1 bg-transparent border-none focus:outline-none text-sm text-textMain placeholder-textMuted/70 py-1 disabled:opacity-50"
+                      className="flex-1 bg-transparent border-none focus:outline-none text-sm text-textMain placeholder-textMuted/70 py-1"
                     />
                     <button 
                       onClick={() => handleSendMessage()}
