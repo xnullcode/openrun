@@ -61,7 +61,43 @@ function CodeBlock({ code, language, editorRef }: { code: string; language: stri
 
   const handleApply = () => {
     if (editorRef?.current) {
-      editorRef.current.setValue(code);
+      const editor = editorRef.current;
+      const selection = editor.getSelection();
+      const hasSelection = selection && (
+        selection.startLineNumber !== selection.endLineNumber ||
+        selection.startColumn !== selection.endColumn
+      );
+      
+      const isFullSolution = /class\s+\w+|struct\s+\w+|public\s+class/.test(code);
+
+      if (hasSelection) {
+        editor.executeEdits('ai-apply', [{
+          range: selection,
+          text: code,
+          forceMoveMarkers: true
+        }]);
+        editor.focus();
+      } else if (isFullSolution) {
+        editor.setValue(code);
+        editor.focus();
+      } else {
+        const pos = editor.getPosition();
+        if (pos) {
+          editor.executeEdits('ai-apply', [{
+            range: {
+              startLineNumber: pos.lineNumber,
+              startColumn: pos.column,
+              endLineNumber: pos.lineNumber,
+              endColumn: pos.column
+            },
+            text: code,
+            forceMoveMarkers: true
+          }]);
+        } else {
+          editor.setValue(code);
+        }
+        editor.focus();
+      }
     }
   };
 
