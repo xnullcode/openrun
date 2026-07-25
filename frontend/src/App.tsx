@@ -214,9 +214,9 @@ function App() {
     }
   }, [theme]);
 
-  const handleReset = () => {
-    if (window.confirm("Are you sure you want to reset all code, test cases, and settings? This cannot be undone.")) {
-      localStorage.removeItem('openrun_workspaces');
+  const handleResetAll = () => {
+    if (window.confirm("FACTORY RESET: Are you sure you want to reset all workspaces, settings, and chat history? This cannot be undone.")) {
+      localStorage.clear();
       window.location.reload();
     }
   };
@@ -378,6 +378,25 @@ function App() {
           >
             <Plus size={16} />
           </button>
+
+          <button
+            onClick={() => {
+              if (window.confirm("Are you sure you want to reset this workspace? This will clear its code and test cases.")) {
+                updateWorkspace(activeWorkspaceId, {
+                  javaCode: DEFAULT_JAVA_CODE,
+                  cppCode: DEFAULT_CPP_CODE,
+                  testCases: [{ input: '', expectedOutput: '' }],
+                  problemDescription: '',
+                  url: ''
+                });
+                setScrapeUrl('');
+              }
+            }}
+            className="w-7 h-7 rounded-full flex items-center justify-center text-textMuted hover:bg-black/5 dark:hover:bg-white/10 hover:text-textMain transition-all ml-0.5"
+            title="Reset Current Workspace"
+          >
+            <RotateCcw size={14} />
+          </button>
           
           {workspaces.length > 2 && (
             <button
@@ -471,9 +490,9 @@ function App() {
           <Timer />
 
           <button 
-            onClick={handleReset}
+            onClick={handleResetAll}
             className="p-1.5 rounded-lg text-textMuted hover:text-textMain hover:bg-secondary transition-colors h-9 w-9 flex items-center justify-center ml-1"
-            title="Reset to default settings & code"
+            title="Factory Reset (Clear all data)"
           >
             <RotateCcw size={16} />
           </button>
