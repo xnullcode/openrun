@@ -88,6 +88,10 @@ async def api_chat(req: ChatRequest):
 
         # Build dynamic context
         context_str = f"\n\n--- DYNAMIC CONTEXT ---\nUSER IS CURRENTLY IN: {req.chatMode.upper()} MODE\n"
+        if req.chatMode == "help":
+            context_str += "MODE RULES (HELP MODE):\n1. Focus on explanations, debugging guidance, logic analysis, and hints.\n2. Do NOT generate full code solutions or complete replacement code blocks.\n3. Keep code snippets minimal (at most 1-3 illustrative pseudo-code or partial lines) and guide the user to write the fix themselves.\n"
+        elif req.chatMode == "code":
+            context_str += "MODE RULES (CODE MODE):\n1. Provide direct, complete, and production-ready code solutions.\n2. Keep textual explanations minimal and focus on providing clean code snippets.\n"
         
         if req.problemDescription:
             context_str += f"\nPROBLEM DESCRIPTION:\n{req.problemDescription}\n"
@@ -125,7 +129,6 @@ async def api_chat(req: ChatRequest):
                             line = line.strip()
                             if line:
                                 yield line.decode('utf-8') + "\n\n"
-                                time.sleep(0.03)
         except Exception as e:
             yield f"data: {{\"error\": \"{str(e)}\"}}\n\n"
 
