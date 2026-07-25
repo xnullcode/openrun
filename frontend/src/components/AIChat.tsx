@@ -249,7 +249,7 @@ function ModelSelector({ provider, model, setModel }: { provider: string, model:
         onClick={() => setIsOpen(!isOpen)}
         className="cancel-drag flex items-center gap-1 text-textMain hover:bg-black/5 dark:hover:bg-white/5 rounded-xl px-2 h-8 transition-colors max-w-full overflow-hidden"
       >
-        <div className="text-[14px] leading-none flex items-center gap-1 overflow-hidden whitespace-nowrap flex-nowrap shrink">
+        <div className="text-[14px] leading-normal flex items-center gap-1 overflow-hidden whitespace-nowrap flex-nowrap shrink py-0.5">
           <span className="font-normal opacity-80 shrink-0">{providerName}</span>
           <span className="font-bold" title={model}>
             {model.length > 14 ? model.substring(0, 14) + '...' : model}
@@ -666,7 +666,7 @@ function ChatInnerContent({
                 savedChatScrollPosition = scrollContainerRef.current.scrollTop;
               }
             }}
-            className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 custom-scrollbar pb-6"
+            className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 custom-scrollbar pb-6 aichat-content"
           >
             <div className="bg-secondary self-start rounded-2xl rounded-tl-sm p-4 max-w-[90%] shadow-sm border border-border flex items-start gap-3">
                   <p className="text-sm text-textMain leading-relaxed pt-1">

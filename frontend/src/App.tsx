@@ -94,6 +94,44 @@ function App() {
     });
   };
 
+  useEffect(() => {
+    const handleDOMSelection = () => {
+      setTimeout(() => {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) return;
+
+        const text = selection.toString().trim();
+        if (!text) return;
+
+        const anchorNode = selection.anchorNode;
+        if (!anchorNode) return;
+
+        const element = anchorNode.nodeType === Node.ELEMENT_NODE 
+          ? (anchorNode as Element) 
+          : anchorNode.parentElement;
+
+        if (element && (element.closest('.aichat-content') || element.closest('.problem-description'))) {
+          const range = selection.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            setSelectionPopup({
+              x: rect.left + rect.width / 2,
+              y: rect.top,
+              text
+            });
+          }
+        }
+      }, 20);
+    };
+
+    document.addEventListener('mouseup', handleDOMSelection);
+    document.addEventListener('touchend', handleDOMSelection);
+    return () => {
+      document.removeEventListener('mouseup', handleDOMSelection);
+      document.removeEventListener('touchend', handleDOMSelection);
+    };
+  }, []);
+
   const handleAskAI = () => {
     if (selectionPopup) {
       setAttachedSnippets(prev => [...prev, selectionPopup.text]);
@@ -454,7 +492,7 @@ function App() {
                     {/* Text Font Size Control */}
                     <div className="col-span-2 flex items-center justify-between p-3.5 rounded-[20px] bg-[#303034] text-white">
                       <div className="flex items-center gap-2">
-                        <Type size={18} className="text-primary" />
+                        <Type size={18} className="text-blue-400" />
                         <div className="flex flex-col">
                           <span className="font-medium text-sm">Text Font Size</span>
                           <span className="text-xs opacity-70">Chat & Description</span>
