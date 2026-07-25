@@ -1,0 +1,1 @@
+Do not generate the main class or main object (e.g., `public static void main` in Java or `int main()` in C++) unless specifically requested. The system utilizes an auto-parser that can run code without the main class/function, so there is no need to include the main entry point in the generated code. Make sure this is applied for both Java and C++.

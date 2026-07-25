@@ -673,7 +673,7 @@ function App() {
         >
           <button
             onClick={handleAskAI}
-            className="flex items-center gap-2 bg-surface border border-border shadow-2xl rounded-full px-3 py-1.5 text-xs font-bold text-textMain hover:bg-secondary hover:scale-105 transition-all"
+            className="flex items-center gap-2 bg-surface border border-border shadow-2xl rounded-full px-3 py-1.5 text-xs font-bold text-textMain hover:bg-secondary hover:opacity-90 transition-all"
           >
             <Sparkles size={14} className="text-primary" />
             Ask AI

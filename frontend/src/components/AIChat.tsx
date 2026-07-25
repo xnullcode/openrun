@@ -397,6 +397,15 @@ function ChatInnerContent({
     setApiKey('');
   };
 
+  const handleClearAllKeys = () => {
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('openrun_ai_key_')) {
+        localStorage.removeItem(key);
+      }
+    });
+    setApiKey('');
+  };
+
   const removeAttachment = (index: number) => {
     setAttachedSnippets(prev => prev.filter((_, i) => i !== index));
   };
@@ -483,6 +492,12 @@ function ChatInnerContent({
                   </button>
                 )}
               </div>
+              <button
+                onClick={handleClearAllKeys}
+                className="w-full mt-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg py-2 text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+              >
+                <Trash2 size={14} /> Clear All Stored Keys
+              </button>
           </div>
         </div>
       </div>
@@ -685,7 +700,7 @@ export default function AIChat() {
         }}
       >
         <button
-          className="w-14 h-14 bg-primary text-white dark:text-[#1a2e60] rounded-full shadow-2xl flex items-center justify-center hover:scale-105"
+          className="w-14 h-14 bg-primary text-white dark:text-[#1a2e60] rounded-full shadow-2xl flex items-center justify-center hover:opacity-90 transition-opacity"
           title="Open AI Assistant"
         >
           <Sparkles size={24} />
@@ -742,7 +757,7 @@ export default function AIChat() {
           <button 
             onClick={() => setIsChatOpen(false)}
             className="cancel-drag p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 hover:text-red-500 dark:hover:text-red-500 transition-colors"
-            title="Close to FAB"
+            title="Minimise"
           >
             <ChevronDown size={16} className="text-textMuted group-hover:text-red-500" />
           </button>
@@ -789,7 +804,7 @@ export function DockedAIChat() {
               setIsChatOpen(false);
             }}
             className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 hover:text-red-500 dark:hover:text-red-500 transition-colors"
-            title="Close to FAB"
+            title="Minimise"
           >
             <ChevronDown size={16} className="text-textMuted group-hover:text-red-500" />
           </button>
