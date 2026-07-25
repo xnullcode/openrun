@@ -238,8 +238,8 @@ function ChatInnerContent({
   }, []);
 
   useEffect(() => {
-    if (isWaiting) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isWaiting && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
     }
   }, [isWaiting]);
 
