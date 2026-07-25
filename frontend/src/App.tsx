@@ -11,7 +11,7 @@ import { useAIChat, DEFAULT_CPP_CODE, DEFAULT_JAVA_CODE, type TestCase, type Tes
 function App() {
   const { 
     workspaces, setWorkspaces, activeWorkspaceId, setActiveWorkspaceId, updateWorkspace, activeWorkspace,
-    isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, 
+    isDocked, setEditorRef, isChatOpen, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, 
     setAutoSendPrompt, isGenerating, uiFontSize, setUiFontSize 
   } = useAIChat();
   const language = activeWorkspace.activeLanguage;
@@ -195,6 +195,12 @@ function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (isChatOpen) {
+      setIsSettingsOpen(false);
+    }
+  }, [isChatOpen]);
 
   useEffect(() => {
     localStorage.setItem('openrun_theme', theme);
@@ -440,7 +446,7 @@ function App() {
   return (
     <div className="h-[100dvh] w-full flex flex-col bg-background text-textMain overflow-hidden font-sans">
       {/* Header */}
-      <header className="py-2 min-h-[56px] border-b border-border bg-surface px-2 md:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3 shadow-md z-50 shrink-0">
+      <header className="py-2 min-h-[56px] border-b border-border bg-surface px-2 md:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3 shadow-md z-[60] shrink-0">
         
         {/* Left side: Logo */}
         <div className="flex items-center gap-2 md:gap-3 shrink-0">

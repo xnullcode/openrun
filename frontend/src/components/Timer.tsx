@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Timer as TimerIcon, Play, Pause, RotateCcw, ChevronLeft, Clock, Square } from 'lucide-react';
+import { useAIChat } from '../context/AIChatContext';
 
 export default function Timer() {
+  const { isChatOpen } = useAIChat();
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [timeElapsed, setTimeElapsed] = useState(0); // for stopwatch
@@ -57,6 +59,12 @@ export default function Timer() {
     }
     return () => clearInterval(interval);
   }, [isActive, isPaused, mode]);
+
+  useEffect(() => {
+    if (isChatOpen) {
+      setShowPopover(false);
+    }
+  }, [isChatOpen]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
