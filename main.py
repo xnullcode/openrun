@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
-from executor import execute_java_code
+from executor import execute_java_code, execute_cpp_code
 from scraper import scrape_problem
 import os
 import requests
@@ -19,6 +19,7 @@ class TestCase(BaseModel):
 class ExecuteRequest(BaseModel):
     code: str
     testCases: List[TestCase]
+    language: Optional[str] = "java"
 
 class ScrapeRequest(BaseModel):
     url: str
@@ -39,7 +40,12 @@ class ChatRequest(BaseModel):
 @app.post("/api/execute")
 async def api_execute(req: ExecuteRequest):
     test_cases_dict = [{"input": tc.input, "expectedOutput": tc.expectedOutput} for tc in req.testCases]
-    result = await execute_java_code(req.code, test_cases_dict)
+    
+    if req.language == "cpp":
+        result = await execute_cpp_code(req.code, test_cases_dict)
+    else:
+        result = await execute_java_code(req.code, test_cases_dict)
+        
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error", "Execution failed"))
     return result

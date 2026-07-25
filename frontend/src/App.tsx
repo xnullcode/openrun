@@ -35,6 +35,19 @@ public class Solution {
     }
 }`;
 
+const DEFAULT_CPP_CODE = `#include <iostream>
+#include <vector>
+
+using namespace std;
+
+class Solution {
+public:
+    int solve(int n) {
+        // Your code here
+        return n;
+    }
+};`;
+
 function App() {
   const [code, setCode] = useState(() => localStorage.getItem('openrun_code') || DEFAULT_JAVA_CODE);
   const [testCases, setTestCases] = useState<TestCase[]>(() => {
@@ -44,6 +57,9 @@ function App() {
   const [results, setResults] = useState<TestResult[]>([]);
   const [activeTab, setActiveTab] = useState<'description' | 'tests' | 'results' | 'ai'>('description');
   const [activeCaseIndex, setActiveCaseIndex] = useState(0);
+  const [language, setLanguage] = useState<'java' | 'cpp'>(() => {
+    return (localStorage.getItem('openrun_language') as 'java' | 'cpp') || 'java';
+  });
   
   const { isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, problemDescription, setProblemDescription, setMessages: setAIMessages } = useAIChat();
   const editorRef = useRef<any>(null);
@@ -138,7 +154,7 @@ function App() {
     if (window.confirm("Are you sure you want to reset all code, test cases, and settings? This cannot be undone.")) {
       localStorage.removeItem('openrun_code');
       localStorage.removeItem('openrun_testcases');
-      setCode(DEFAULT_JAVA_CODE);
+      setCode(language === 'cpp' ? DEFAULT_CPP_CODE : DEFAULT_JAVA_CODE);
       setTestCases([{ input: '', expectedOutput: '' }]);
       setResults([]);
       setActiveTab('tests');
@@ -160,6 +176,10 @@ function App() {
   }, [testCases]);
 
   useEffect(() => {
+    localStorage.setItem('openrun_language', language);
+  }, [language]);
+
+  useEffect(() => {
     localStorage.setItem('openrun_desc', problemDescription);
   }, [problemDescription]);
 
@@ -169,7 +189,7 @@ function App() {
     setActiveTab('results');
     setActiveCaseIndex(0); // Reset to first case on new run
     try {
-      const res = await axios.post('/api/execute', { code, testCases });
+      const res = await axios.post('/api/execute', { code, testCases, language });
       if (res.data.success) {
         setResults(res.data.results);
       }
@@ -262,7 +282,34 @@ function App() {
   const editorPanelContent = (
     <div className="w-full h-full flex flex-col bg-background">
       <div className="h-10 bg-surface border-b border-border flex items-center justify-between px-4 text-sm font-medium text-textMuted shrink-0">
-        <span>Solution.java</span>
+        <div className="flex items-center gap-1 bg-secondary p-1 rounded-md border border-border/50">
+          <button 
+            onClick={() => {
+              if (language !== 'java') {
+                setLanguage('java');
+                if (code.trim() === DEFAULT_CPP_CODE.trim() || code.trim() === '') {
+                  setCode(DEFAULT_JAVA_CODE);
+                }
+              }
+            }}
+            className={`px-3 py-1 rounded-sm text-xs font-bold transition-all ${language === 'java' ? 'bg-primary text-white dark:text-[#1a2e60] shadow-sm' : 'text-textMuted hover:text-textMain'}`}
+          >
+            Solution.java
+          </button>
+          <button 
+            onClick={() => {
+              if (language !== 'cpp') {
+                setLanguage('cpp');
+                if (code.trim() === DEFAULT_JAVA_CODE.trim() || code.trim() === '') {
+                  setCode(DEFAULT_CPP_CODE);
+                }
+              }
+            }}
+            className={`px-3 py-1 rounded-sm text-xs font-bold transition-all ${language === 'cpp' ? 'bg-primary text-white dark:text-[#1a2e60] shadow-sm' : 'text-textMuted hover:text-textMain'}`}
+          >
+            Solution.cpp
+          </button>
+        </div>
         <div className="flex items-center gap-1.5 bg-secondary px-2 py-1 rounded-md">
           <button onClick={() => setFontSize(f => Math.max(10, f - 1))} className="hover:text-textMain transition-colors" title="Decrease Font Size">
             <Minus size={14} />
@@ -276,7 +323,7 @@ function App() {
       <div className="flex-1 overflow-hidden">
         <Editor
           height="100%"
-          defaultLanguage="java"
+          language={language}
           theme={theme === 'dark' ? 'vs-dark' : 'light'}
           value={code}
           onChange={(val: string | undefined) => setCode(val || '')}

@@ -27,12 +27,12 @@ function highlightJava(code: string) {
     // Single-line comments
     .replace(/(\/\/.*?)$/gm, '<span class="text-gray-500 italic">$1</span>')
     // Numbers
-    .replace(/\b(\d+\.?\d*[fFdDlL]?)\b/g, '<span class="text-orange-300">$1</span>');
+    .replace(/\b(\d+\.?\d*[fFdDlL]?)\b(?![^<]*>)/g, '<span class="text-orange-300">$1</span>');
   
   // Keywords
   JAVA_KEYWORDS.forEach(kw => {
     result = result.replace(
-      new RegExp(`\\b(${kw})\\b`, 'g'),
+      new RegExp(`\\b(${kw})\\b(?![^<]*>)`, 'g'),
       (match) => {
         if (['true','false','null'].includes(match)) return `<span class="text-orange-300">${match}</span>`;
         if (['String','System','Scanner','Arrays','List','Map','Set','ArrayList','HashMap','HashSet','LinkedList','Collections','Math'].includes(match))
@@ -529,7 +529,7 @@ function ChatInnerContent({
                   
                   return (
                     <div key={idx} className={`${m.role === 'user' ? 'bg-primary text-white dark:text-[#1a2e60] self-end rounded-tr-sm' : 'bg-secondary text-textMain self-start rounded-tl-sm'} rounded-2xl p-4 max-w-[90%] shadow-sm flex items-start gap-3`}>
-                      <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans">
+                      <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans min-w-0 w-full break-words">
                         {m.role === 'assistant' ? <MarkdownRenderer text={m.content} editorRef={editorRef} /> : m.content}
                       </div>
                     </div>
