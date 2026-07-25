@@ -3,6 +3,8 @@ import { Rnd } from 'react-rnd';
 import { Sparkles, X, Send, Settings, Save, Pin, Trash2, PanelRightClose, PanelLeft, ChevronDown, Check, Copy, ClipboardPaste } from 'lucide-react';
 import { useAIChat, type AIProvider, PROVIDERS } from '../context/AIChatContext';
 
+let savedChatScrollPosition: number | null = null;
+
 // Java and C++ syntax highlighting keywords
 const CODE_KEYWORDS = new Set([
   'abstract','assert','boolean','break','byte','case','catch','char','class','const',
@@ -214,6 +216,17 @@ function ChatInnerContent({
   const [isWaiting, setIsWaiting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      if (savedChatScrollPosition !== null) {
+        scrollContainerRef.current.scrollTop = savedChatScrollPosition;
+      } else {
+        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (isWaiting) {
@@ -525,8 +538,16 @@ function ChatInnerContent({
             </div>
           </div>
 
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 custom-scrollbar pb-6">
-                <div className="bg-secondary self-start rounded-2xl rounded-tl-sm p-4 max-w-[90%] shadow-sm border border-border flex items-start gap-3">
+          <div 
+            ref={scrollContainerRef}
+            onScroll={() => {
+              if (scrollContainerRef.current) {
+                savedChatScrollPosition = scrollContainerRef.current.scrollTop;
+              }
+            }}
+            className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 custom-scrollbar pb-6"
+          >
+            <div className="bg-secondary self-start rounded-2xl rounded-tl-sm p-4 max-w-[90%] shadow-sm border border-border flex items-start gap-3">
                   <p className="text-sm text-textMain leading-relaxed pt-1">
                     Hello! I'm your AI coding assistant. I'm currently in <span className="font-bold text-primary">{chatMode === 'help' ? 'Helping Mode' : 'Full Code Mode'}</span>.
                     <br/><br/>
