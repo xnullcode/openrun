@@ -1,20 +1,25 @@
 # OpenRun
 
-OpenRun is a local code execution platform and AI-powered coding assistant. It allows you to write, test, and debug Java and C++ code directly in your browser. The platform includes a web scraper that pulls programming problems from competitive coding platforms like LeetCode and TakeUForward. It also features a context-aware AI chat window that integrates with multiple language models to help you solve problems.
+OpenRun is a web-based code execution environment and AI coding assistant for Java and C++. It combines browser-based code editing, competitive programming problem scraping, and real-time LLM interaction. Developers can write code, run test cases against compiled binaries, scrape problem details directly from platforms like LeetCode or TakeUForward, and receive streaming AI feedback without leaving the editor.
 
 ## Interesting Techniques
 
-- **Server-Sent Events (SSE) Parsing**: The application streams AI responses word-by-word instead of waiting for the full network payload. The frontend parses these data chunks in real-time using the native web Streams API. [Read more about the Streams API on MDN](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API).
-- **Persistent Local State**: The frontend heavily utilizes local web storage to maintain independent code histories for both Java and C++. When you switch between languages or refresh the page, the UI and the AI chat context instantly restore your previous working state. [Read more about the Web Storage API on MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API).
-- **Dynamic Code Execution**: The backend compiles and runs raw Java and C++ code using system processes in an isolated environment. It parses execution outputs and dynamically maps compile-time errors back to the correct line numbers in your original code. 
+- **Real-Time Stream Processing**: Uses the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) and [ReadableStream](https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream) to parse [Server-Sent Events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) word-by-word, rendering AI responses immediately without waiting for complete network payloads.
+- **Persistent State Management**: Employs the [Web Storage API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API) to cache code buffers, custom test cases, active settings, and chat history locally across browser reloads and language switches.
+- **Text Selection Detection**: Uses [Window.getSelection()](https://developer.mozilla.org/en-US/docs/Web/API/Window/getSelection) to track user text highlights in the editor and display contextual floating AI prompts dynamically over the highlighted range.
+- **Isolated Process Harness Injection**: Compiles Java and C++ source files dynamically by injecting test harnesses and wrapping user code into executable entry points, capturing execution metrics and mapping compiler errors back to original line numbers via `asyncio` subprocess pipelines.
+- **Sanitized HTML Rendering**: Sanitizes scraped problem descriptions with [DOMPurify](https://github.com/cure53/DOMPurify) before injecting HTML into the DOM via React, protecting against cross-site scripting vulnerabilities.
 
 ## Technologies and Libraries
 
-- **[@monaco-editor/react](https://github.com/suren-atoyan/monaco-react)**: Integrates the Monaco Editor (the engine that powers VS Code) into React, providing professional syntax highlighting, error squiggles, and autocompletion right in the browser.
-- **[React-Rnd](https://github.com/bokuweb/react-rnd)**: A resizable and draggable component for React used to build the flexible AI chat pane and tools interface.
-- **[FastAPI](https://fastapi.tiangolo.com/)**: A high-performance Python framework used to build the backend API endpoints and manage the asynchronous streaming responses.
-- **[Lucide React](https://lucide.dev/)**: Provides the clean, consistent icons used throughout the user interface.
-- **[Tailwind CSS](https://tailwindcss.com/)**: Handles all application styling with utility classes.
+- **[@monaco-editor/react](https://github.com/suren-atoyan/monaco-react)**: React wrapper for the [Monaco Editor](https://microsoft.github.io/monaco-editor/), providing syntax highlighting, error markers, and code completion.
+- **[react-resizable-panels](https://github.com/bvaughn/react-resizable-panels)**: Flexible panel components for building configurable multi-pane workspace layouts.
+- **[React-Rnd](https://github.com/bokuweb/react-rnd)**: Draggable and resizable container component used for floating windows like the AI Chat interface.
+- **[DOMPurify](https://github.com/cure53/DOMPurify)**: Security library for sanitizing HTML before rendering.
+- **[Lucide React](https://lucide.dev/)**: Icon library for React components.
+- **[FastAPI](https://fastapi.tiangolo.com/)**: Asynchronous Python web framework for handling compilation requests and streaming AI responses.
+- **[Beautiful Soup 4](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)**: HTML parsing library used in [`scraper.py`](./scraper.py) to extract problem constraints, inputs, and sample test cases.
+- **Fonts**: Configured to render code using [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono) and [Fira Code](https://fonts.google.com/specimen/Fira+Code).
 
 ## Project Structure
 
@@ -25,15 +30,17 @@ OpenRun is a local code execution platform and AI-powered coding assistant. It a
 │   └── src/
 │       ├── components/
 │       └── context/
-├── docker-compose.yml
 ├── Dockerfile
+├── docker-compose.yml
 ├── executor.py
 ├── main.py
+├── openrun.sh
+├── requirements.txt
 └── scraper.py
 ```
 
-- [`frontend/src/components/`](./frontend/src/components/): Contains the isolated React components that construct the user interface, such as the AI Chatbox and the layout panels.
-- [`frontend/src/context/`](./frontend/src/context/): Contains React Context providers, such as the AI configuration state that passes language awareness down to the chat.
-- [`executor.py`](./executor.py): Manages the generation of test harnesses and the compilation of Java and C++ code.
-- [`main.py`](./main.py): The FastAPI server entry point that handles API routing and AI prompt building.
-- [`scraper.py`](./scraper.py): Contains the logic for asynchronously fetching problem descriptions, test cases, and boilerplate code from external APIs.
+- [`frontend/src/components/`](./frontend/src/components/): UI components including [`AIChat.tsx`](./frontend/src/components/AIChat.tsx) for floating/docked chat and [`Timer.tsx`](./frontend/src/components/Timer.tsx) for session timing.
+- [`frontend/src/context/`](./frontend/src/context/): React context providers, such as [`AIChatContext.tsx`](./frontend/src/context/AIChatContext.tsx), managing global AI provider settings, messages, and snippet attachments.
+- [`executor.py`](./executor.py): Handles code harness injection, temp file generation, C++/Java compilation, and process execution.
+- [`main.py`](./main.py): FastAPI backend entry point that handles REST endpoints, streaming responses, and AI prompt assembly.
+- [`scraper.py`](./scraper.py): Asynchronous web scraper for extracting problem descriptions and test cases from LeetCode and TakeUForward.
