@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Rnd } from 'react-rnd';
 import { Sparkles, X, Send, Settings, Save, Pin, Trash2, PanelRightClose, PanelLeft, ChevronDown, Check, Copy, ClipboardPaste } from 'lucide-react';
-import { useAIChat, type AIProvider, PROVIDERS } from '../context/AIChatContext';
+import { useAIChat, type AIProvider, type ChatMessage, PROVIDERS } from '../context/AIChatContext';
 
 let savedChatScrollPosition: number | null = null;
 
@@ -99,7 +99,7 @@ function MarkdownRenderer({ text, editorRef }: { text: string; editorRef: React.
   if (!text) return null;
 
   // Split text by code blocks first
-  const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
+  const codeBlockRegex = /```(.*?)[\r\n]+([\s\S]*?)```/g;
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
   let match;
@@ -110,7 +110,7 @@ function MarkdownRenderer({ text, editorRef }: { text: string; editorRef: React.
       parts.push(<InlineMarkdown key={`text-${lastIndex}`} text={text.slice(lastIndex, match.index).trim()} />);
     }
     // Add code block
-    parts.push(<CodeBlock key={`code-${match.index}`} language={match[1]} code={match[2].trim()} editorRef={editorRef} />);
+    parts.push(<CodeBlock key={`code-${match.index}`} language={match[1].trim()} code={match[2].trim()} editorRef={editorRef} />);
     lastIndex = match.index + match[0].length;
   }
 
@@ -263,13 +263,22 @@ function ChatInnerContent({
       return;
     }
     
-    let content = msgToUse;
+    let hiddenContext: string | undefined;
+    let newAttachments: string[] | undefined;
+
     if (attachedSnippets.length > 0) {
-      content += "\n\nAttached Code:\n" + attachedSnippets.map(s => "```" + language + "\n" + s + "\n```").join("\n");
+      hiddenContext = "\n\nAttached Code:\n" + attachedSnippets.map(s => "```" + language + "\n" + s + "\n```").join("\n");
+      newAttachments = [...attachedSnippets];
       setAttachedSnippets([]);
     }
     
-    const newUserMsg = { role: 'user' as const, content };
+    const newUserMsg: ChatMessage = { 
+      role: 'user', 
+      content: msgToUse,
+      hiddenContext,
+      attachments: newAttachments
+    };
+    
     const currentMessages = [...messages.map(m => ({...m})), newUserMsg];
     setMessages(currentMessages);
     setInputMessage('');
@@ -284,7 +293,10 @@ function ChatInnerContent({
           baseUrl,
           model,
           apiKey,
-          messages: currentMessages,
+          messages: currentMessages.map(m => ({
+            role: m.role,
+            content: m.hiddenContext ? `${m.content}${m.hiddenContext}` : m.content
+          })),
           problemDescription,
           editorCode: editorRef?.current?.getValue(),
           chatMode,
@@ -599,9 +611,22 @@ function ChatInnerContent({
                   }
                   
                   return (
-                    <div ref={idx === messages.length - 1 ? lastMessageRef : null} key={idx} className={`${m.role === 'user' ? 'bg-primary text-white dark:text-[#1a2e60] self-end rounded-tr-sm' : 'bg-secondary text-textMain self-start rounded-tl-sm'} rounded-2xl p-4 max-w-[90%] shadow-sm flex items-start gap-3`}>
-                      <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans min-w-0 w-full break-words">
-                        <MarkdownRenderer text={m.content} editorRef={editorRef} />
+                    <div ref={idx === messages.length - 1 ? lastMessageRef : null} key={idx} className={`relative flex flex-col gap-1.5 max-w-[90%] ${m.role === 'user' ? 'self-end' : 'self-start'}`}>
+                      {m.attachments && m.attachments.length > 0 && (
+                        <div className="flex flex-wrap gap-2 justify-end mb-1">
+                          {m.attachments.map((att, aIdx) => (
+                            <div key={aIdx} className="flex items-center gap-1.5 bg-primary/20 text-primary border border-primary/30 rounded-lg px-2 py-1 max-w-[150px]">
+                              <Pin size={10} className="shrink-0" />
+                              <span className="text-[10px] font-medium truncate">{att.slice(0, 20)}...</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <div className={`${m.role === 'user' ? 'bg-primary text-white dark:text-[#1a2e60] self-end rounded-tr-sm' : 'bg-secondary text-textMain self-start rounded-tl-sm'} rounded-2xl p-4 shadow-sm flex items-start gap-3 w-full`}>
+                        <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans min-w-0 w-full break-words">
+                          <MarkdownRenderer text={m.content} editorRef={editorRef} />
+                        </div>
                       </div>
                     </div>
                   );

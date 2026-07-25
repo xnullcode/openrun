@@ -111,7 +111,7 @@ function App() {
     const currentCode = editorRef?.current?.getValue();
     if (currentCode) {
       setAttachedSnippets(prev => [...prev, currentCode]);
-      setAutoSendPrompt("I've got this solution working, but I want to optimize it further. Could you guide me on how to improve its time and space complexity? Please provide a heavily commented optimized version so I can understand exactly how the optimization is done.\n\nCRITICAL: Do NOT generate any `main` class, `main` object, or `int main()` function. Please provide ONLY the raw solution class/function logic!");
+      setAutoSendPrompt("I've got this solution working, but I want to optimize it further. Could you analyze the current time and space complexity, and then guide me step-by-step on how to optimize it? Please provide the optimized code with normal, clear comments explaining the changes.\n\nCRITICAL: Do NOT generate any `main` class, `main` object, or `int main()` function. Please provide ONLY the raw solution class/function logic!");
       if (isDocked) {
         setActiveTab('ai');
       } else {

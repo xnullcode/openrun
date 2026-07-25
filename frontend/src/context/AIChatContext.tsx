@@ -4,8 +4,10 @@ import type { ReactNode } from 'react';
 export type AIProvider = 'openai' | 'groq' | 'anthropic' | 'gemini' | 'openrouter' | 'cerebras' | 'mistral' | 'huggingface' | 'cloudflare' | 'deepseek' | 'github' | 'nvidia' | 'custom';
 export type AIMode = 'help' | 'code';
 export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system_alert';
+  role: 'system' | 'user' | 'assistant' | 'system_alert';
   content: string;
+  hiddenContext?: string;
+  attachments?: string[];
 }
 
 export interface Snippet {
