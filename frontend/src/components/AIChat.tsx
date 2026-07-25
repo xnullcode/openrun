@@ -298,7 +298,6 @@ function ChatInnerContent({
       }
 
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
-      setIsSending(false);
       setIsWaiting(false);
       
       const reader = res.body?.getReader();
@@ -607,7 +606,7 @@ function ChatInnerContent({
                     </div>
                   );
                 })}
-                {isSending && (
+                {isWaiting && (
                   <div className="bg-secondary self-start rounded-2xl rounded-tl-sm p-4 max-w-[90%] shadow-sm flex items-center gap-2">
                     <div className="w-2 h-2 bg-textMuted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <div className="w-2 h-2 bg-textMuted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -639,11 +638,12 @@ function ChatInnerContent({
                   <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 rounded-[24px] p-1.5 pl-4 pr-1.5 border border-border focus-within:border-primary/50 transition-colors shadow-inner">
                     <input 
                       type="text" 
-                      placeholder="Ask anything"
+                      placeholder={isSending ? "Wait for response..." : "Ask anything"}
                       value={inputMessage}
                       onChange={e => setInputMessage(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-                      className="flex-1 bg-transparent border-none focus:outline-none text-sm text-textMain placeholder-textMuted/70 py-1"
+                      onKeyDown={e => e.key === 'Enter' && !isSending && handleSendMessage()}
+                      disabled={isSending}
+                      className="flex-1 bg-transparent border-none focus:outline-none text-sm text-textMain placeholder-textMuted/70 py-1 disabled:opacity-50"
                     />
                     <button 
                       onClick={() => handleSendMessage()}
