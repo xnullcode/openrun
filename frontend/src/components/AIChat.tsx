@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { Rnd } from 'react-rnd';
 import { Sparkles, X, Send, Settings, Save, Pin, Trash2, PanelRightClose, PanelLeft, ChevronDown, Check, Copy, ClipboardPaste } from 'lucide-react';
 import { useAIChat, type AIProvider, type ChatMessage, PROVIDERS } from '../context/AIChatContext';
@@ -50,7 +50,7 @@ function highlightCode(code: string) {
   return result;
 }
 
-function CodeBlock({ code, language, editorRef }: { code: string; language: string; editorRef: React.MutableRefObject<any> | null }) {
+const CodeBlock = memo(function CodeBlock({ code, language, editorRef }: { code: string; language: string; editorRef: React.MutableRefObject<any> | null }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -132,9 +132,9 @@ function CodeBlock({ code, language, editorRef }: { code: string; language: stri
       </pre>
     </div>
   );
-}
+});
 
-function MarkdownRenderer({ text, editorRef }: { text: string; editorRef: React.MutableRefObject<any> | null }) {
+const MarkdownRenderer = memo(function MarkdownRenderer({ text, editorRef }: { text: string; editorRef: React.MutableRefObject<any> | null }) {
   if (!text) return null;
 
   // Split text by code blocks first
@@ -159,7 +159,7 @@ function MarkdownRenderer({ text, editorRef }: { text: string; editorRef: React.
   }
 
   return <>{parts}</>;
-}
+});
 
 function formatMath(math: string): string {
   let cleaned = math
@@ -180,7 +180,7 @@ function formatMath(math: string): string {
   return `<code class="bg-primary/15 text-primary px-1.5 py-0.5 rounded font-mono text-[12px]">${cleaned}</code>`;
 }
 
-function InlineMarkdown({ text }: { text: string }) {
+const InlineMarkdown = memo(function InlineMarkdown({ text }: { text: string }) {
   // Escape HTML
   let html = text
     .replace(/&/g, '&amp;')
@@ -224,7 +224,7 @@ function InlineMarkdown({ text }: { text: string }) {
   }).join('');
 
   return <span dangerouslySetInnerHTML={{ __html: formatted }} />;
-}
+});
 
 function ModelSelector({ provider, model, setModel }: { provider: string, model: string, setModel: (m: string) => void }) {
   const [isOpen, setIsOpen] = useState(false);

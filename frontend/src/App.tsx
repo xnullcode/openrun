@@ -96,39 +96,57 @@ function App() {
 
   useEffect(() => {
     const handleDOMSelection = () => {
-      setTimeout(() => {
-        const selection = window.getSelection();
-        if (!selection || selection.isCollapsed) return;
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) {
+        setSelectionPopup(null);
+        return;
+      }
 
-        const text = selection.toString().trim();
-        if (!text) return;
+      const text = selection.toString().trim();
+      if (!text) {
+        setSelectionPopup(null);
+        return;
+      }
 
-        const anchorNode = selection.anchorNode;
-        if (!anchorNode) return;
+      const anchorNode = selection.anchorNode;
+      if (!anchorNode) return;
 
-        const element = anchorNode.nodeType === Node.ELEMENT_NODE 
-          ? (anchorNode as Element) 
-          : anchorNode.parentElement;
+      const element = anchorNode.nodeType === Node.ELEMENT_NODE 
+        ? (anchorNode as Element) 
+        : anchorNode.parentElement;
 
-        if (element && (element.closest('.aichat-content') || element.closest('.problem-description'))) {
-          const range = selection.getRangeAt(0);
-          const rect = range.getBoundingClientRect();
-          if (rect.width > 0 && rect.height > 0) {
-            setSelectionPopup({
-              x: rect.left + rect.width / 2,
-              y: rect.top,
-              text
-            });
-          }
+      const container = element?.closest('.aichat-content') || element?.closest('.problem-description');
+      if (container && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        if (rect.bottom < containerRect.top || rect.top > containerRect.bottom || rect.width === 0) {
+          setSelectionPopup(null);
+        } else {
+          setSelectionPopup({
+            x: rect.left + rect.width / 2,
+            y: rect.top,
+            text
+          });
         }
-      }, 20);
+      }
     };
 
-    document.addEventListener('mouseup', handleDOMSelection);
-    document.addEventListener('touchend', handleDOMSelection);
+    const handleMouseUp = () => {
+      setTimeout(handleDOMSelection, 20);
+    };
+
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchend', handleMouseUp);
+    document.addEventListener('selectionchange', handleDOMSelection);
+    window.addEventListener('scroll', handleDOMSelection, true);
+
     return () => {
-      document.removeEventListener('mouseup', handleDOMSelection);
-      document.removeEventListener('touchend', handleDOMSelection);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchend', handleMouseUp);
+      document.removeEventListener('selectionchange', handleDOMSelection);
+      window.removeEventListener('scroll', handleDOMSelection, true);
     };
   }, []);
 
@@ -141,6 +159,7 @@ function App() {
         setIsChatOpen(true);
       }
       setSelectionPopup(null);
+      window.getSelection()?.removeAllRanges();
     }
   };
 
@@ -525,7 +544,7 @@ function App() {
           <button 
             onClick={handleOptimizeAI}
             disabled={isGenerating}
-            className={`group h-9 w-9 ml-0.5 rounded-lg flex items-center justify-center transition-colors border ${isGenerating ? 'bg-secondary/10 border-border/20 opacity-50 cursor-not-allowed' : 'bg-secondary/20 hover:bg-primary/10 border-border/50 hover:border-primary/50 text-textMain'}`}
+            className={`group h-9 w-9 ml-0.5 rounded-lg flex items-center justify-center transition-colors border ${isGenerating ? 'bg-secondary/10 border-border/20 opacity-50 cursor-not-allowed' : 'bg-secondary/20 hover:bg-primary/10 border-border hover:border-primary/50 text-textMain'}`}
             title={isGenerating ? "AI is busy..." : "Guide & Optimize"}
           >
             <Sparkles size={16} className={`text-primary ${!isGenerating && 'group-hover:text-blue-400 transition-colors'}`} />
