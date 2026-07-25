@@ -50,14 +50,14 @@ function App() {
   const [activeCaseIndex, setActiveCaseIndex] = useState(0);
   const editorRef = useRef<any>(null);
 
-  const [selectionPopup, setSelectionPopup] = useState<{ x: number, y: number, text: string } | null>(null);
+  const [selectionPopup, setSelectionPopup] = useState<{ x: number, y: number, text: string, source: 'editor' | 'dom' } | null>(null);
 
   const handleEditorDidMount = (editor: any) => {
     editorRef.current = editor;
     setEditorRef(editorRef);
 
-    editor.onDidChangeCursorSelection((e: any) => {
-      const selection = e.selection;
+    const updateEditorPopup = () => {
+      const selection = editor.getSelection();
       if (selection && !selection.isEmpty()) {
         const text = editor.getModel()?.getValueInRange(selection);
         const domNode = editor.getDomNode();
@@ -68,27 +68,31 @@ function App() {
             setSelectionPopup({
               x: rect.left + pos.left,
               y: rect.top + pos.top,
-              text
+              text,
+              source: 'editor'
             });
+            return;
           }
         }
-      } else {
-        setSelectionPopup(null);
       }
-    });
+      setSelectionPopup(prev => prev?.source === 'editor' ? null : prev);
+    };
+
+    editor.onDidChangeCursorSelection(updateEditorPopup);
+    editor.onDidScrollChange(updateEditorPopup);
   };
 
   useEffect(() => {
     const handleDOMSelection = () => {
       const selection = window.getSelection();
       if (!selection || selection.isCollapsed) {
-        setSelectionPopup(null);
+        setSelectionPopup(prev => prev?.source === 'dom' ? null : prev);
         return;
       }
 
       const text = selection.toString().trim();
       if (!text) {
-        setSelectionPopup(null);
+        setSelectionPopup(prev => prev?.source === 'dom' ? null : prev);
         return;
       }
 
@@ -106,14 +110,17 @@ function App() {
         const containerRect = container.getBoundingClientRect();
 
         if (rect.bottom < containerRect.top || rect.top > containerRect.bottom || rect.width === 0) {
-          setSelectionPopup(null);
+          setSelectionPopup(prev => prev?.source === 'dom' ? null : prev);
         } else {
           setSelectionPopup({
             x: rect.left + rect.width / 2,
             y: rect.top,
-            text
+            text,
+            source: 'dom'
           });
         }
+      } else {
+        setSelectionPopup(prev => prev?.source === 'dom' ? null : prev);
       }
     };
 
