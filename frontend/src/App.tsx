@@ -472,7 +472,7 @@ function App() {
           <div className="flex-1 flex gap-1 bg-secondary border border-border p-1 rounded-lg">
             <input 
               type="text" 
-              placeholder="Paste LeetCode/takeUforward URL" 
+              placeholder="Paste problem URL" 
               className="bg-transparent border-none text-textMain placeholder:text-textMuted focus:ring-0 text-sm flex-1 px-3 py-1 outline-none min-w-[150px]"
               value={scrapeUrl}
               onChange={e => setScrapeUrl(e.target.value)}
