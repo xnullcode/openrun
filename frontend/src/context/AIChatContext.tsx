@@ -72,7 +72,15 @@ export const PROVIDERS: Record<string, { name: string; defaultBaseUrl: string; d
     name: 'Groq', 
     defaultBaseUrl: 'https://api.groq.com/openai/v1', 
     defaultModel: 'llama-3.1-8b-instant', 
-    models: ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'llama-4-scout', 'qwen-2.5-coder-32b', 'whisper-large-v3'] 
+    models: [
+      'llama-3.1-8b-instant',
+      'llama-3.3-70b-versatile',
+      'openai/gpt-oss-120b',
+      'openai/gpt-oss-20b',
+      'qwen/qwen3.6-27b',
+      'groq/compound',
+      'groq/compound-mini'
+    ] 
   },
   anthropic: {
     name: 'Anthropic',
@@ -82,28 +90,39 @@ export const PROVIDERS: Record<string, { name: string; defaultBaseUrl: string; d
   },
   gemini: {
     name: 'Google Gemini (AI Studio)',
-    defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
-    defaultModel: 'gemini-2.5-flash',
-    models: ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro']
+    defaultBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    defaultModel: 'gemini-3.6-flash',
+    models: [
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-3.1-flash-lite',
+      'gemini-2.5-pro',
+      'gemini-2.5-flash',
+      'gemini-2.5-flash-lite'
+    ]
   },
   openrouter: {
     name: 'OpenRouter (Free Tier)',
     defaultBaseUrl: 'https://openrouter.ai/api/v1',
-    defaultModel: 'meta-llama/llama-3.3-70b-instruct:free',
+    defaultModel: 'openrouter/free',
     models: [
-      'meta-llama/llama-3.3-70b-instruct:free', 
-      'deepseek/deepseek-r1:free',
-      'qwen/qwen-3-coder:free',
-      'google/gemini-2.5-flash:free', 
-      'mistralai/mistral-small:free',
-      'nvidia/nemotron-4-340b-instruct:free'
+      'openrouter/free',
+      'qwen/qwen3-coder:free',
+      'moonshotai/kimi-k2.6:free',
+      'google/gemma-4-26b-a4b-it:free',
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'minimax/minimax-m2.5:free',
+      'nousresearch/hermes-3-llama-3.1-405b:free',
+      'qwen/qwen3-next-80b-a3b-instruct:free',
+      'liquid/lfm-2.5-1.2b-thinking:free'
     ]
   },
   cerebras: {
     name: 'Cerebras',
     defaultBaseUrl: 'https://api.cerebras.ai/v1',
-    defaultModel: 'llama3.3-70b',
-    models: ['llama3.3-70b', 'qwen-large']
+    defaultModel: 'gpt-oss-120b',
+    models: ['gpt-oss-120b', 'gemma-4-31b', 'zai-glm-4.7']
   },
   mistral: {
     name: 'Mistral',
@@ -158,7 +177,13 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [model, setModel] = useState(PROVIDERS.openai.defaultModel);
   const [apiKey, setApiKey] = useState('');
   const [chatMode, setChatMode] = useState<AIMode>('help');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const saved = localStorage.getItem('openrun_ai_messages');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [];
+  });
   const [attachedSnippets, setAttachedSnippets] = useState<string[]>([]);
   const [problemDescription, setProblemDescription] = useState<any>(() => {
     return localStorage.getItem('openrun_desc') || '';
@@ -185,13 +210,22 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       } catch (e) {}
     }
 
-    const storedKey = localStorage.getItem('openrun_ai_key');
-    if (storedKey) setApiKey(storedKey);
+    // API key is handled by the provider effect below
   }, []);
+
+  // Update apiKey when provider changes
+  useEffect(() => {
+    const key = localStorage.getItem(`openrun_ai_key_${provider}`);
+    setApiKey(key || '');
+  }, [provider]);
 
   useEffect(() => {
     localStorage.setItem('openrun_language', language);
   }, [language]);
+
+  useEffect(() => {
+    localStorage.setItem('openrun_ai_messages', JSON.stringify(messages));
+  }, [messages]);
 
   const value = {
     isAIEnabled, setIsAIEnabled,
