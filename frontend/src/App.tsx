@@ -355,7 +355,7 @@ function App() {
               setWorkspaces([...workspaces, {
                 id: newId,
                 name: newName,
-                activeLanguage: 'cpp',
+                activeLanguage: 'java',
                 javaCode: DEFAULT_JAVA_CODE,
                 cppCode: DEFAULT_CPP_CODE,
                 url: '',

@@ -254,10 +254,10 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           // Migration from old Workspace to new Workspace format
-          return parsed.map(p => ({
+          return parsed.map((p: any) => ({
             id: p.id,
             name: p.name,
-            activeLanguage: p.activeLanguage || p.language || 'cpp',
+            activeLanguage: p.activeLanguage || p.language || 'java',
             javaCode: p.javaCode !== undefined ? p.javaCode : (p.language === 'java' ? p.code : DEFAULT_JAVA_CODE),
             cppCode: p.cppCode !== undefined ? p.cppCode : (p.language === 'cpp' ? p.code : DEFAULT_CPP_CODE),
             url: p.url || '',
@@ -272,7 +272,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       {
         id: '1',
         name: '1',
-        activeLanguage: (localStorage.getItem('openrun_language') as 'java' | 'cpp') || 'cpp',
+        activeLanguage: (localStorage.getItem('openrun_language') as 'java' | 'cpp') || 'java',
         javaCode: localStorage.getItem('openrun_java_code') || DEFAULT_JAVA_CODE,
         cppCode: localStorage.getItem('openrun_cpp_code') || DEFAULT_CPP_CODE,
         url: '',
@@ -292,7 +292,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       {
         id: '3',
         name: '3',
-        activeLanguage: 'cpp',
+        activeLanguage: 'java',
         javaCode: DEFAULT_JAVA_CODE,
         cppCode: DEFAULT_CPP_CODE,
         url: '',
