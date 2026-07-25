@@ -1,44 +1,39 @@
 # OpenRun
 
-OpenRun is a local execution and testing environment designed for competitive programming and technical interview preparation. It bypasses web-based execution queues by scraping problem constraints and test cases from platforms like LeetCode and TakeUForward, then runs user-submitted code locally using a dynamically injected test harness. It features a resizable, split-pane React frontend that manages code authoring, test case management, and execution results.
+OpenRun is a local code execution platform and AI-powered coding assistant. It allows you to write, test, and debug Java and C++ code directly in your browser. The platform includes a web scraper that pulls programming problems from competitive coding platforms like LeetCode and TakeUForward. It also features a context-aware AI chat window that integrates with multiple language models to help you solve problems.
 
 ## Interesting Techniques
 
-- **Native Audio Synthesis**: The countdown timer generates a beep pattern entirely client-side using the native [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API), specifically utilizing an [OscillatorNode](https://developer.mozilla.org/en-US/docs/Web/API/OscillatorNode) to avoid external audio asset dependencies.
-- **Tab Close Protection**: To prevent accidental loss of a running timer, the application intercepts the [beforeunload event](https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event) to trigger a native browser confirmation dialog.
-- **Asynchronous Subprocessing**: The backend compiles and executes user code locally without blocking the main event loop by leveraging Python's `asyncio.create_subprocess_exec` to interact with `javac` and `java`.
-- **Direct HTML Rendering**: Scraped markdown and HTML problem descriptions are rendered directly into the React DOM using `dangerouslySetInnerHTML`, styled securely via scoped CSS classes.
+- **Server-Sent Events (SSE) Parsing**: The application streams AI responses word-by-word instead of waiting for the full network payload. The frontend parses these data chunks in real-time using the native web Streams API. [Read more about the Streams API on MDN](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API).
+- **Persistent Local State**: The frontend heavily utilizes local web storage to maintain independent code histories for both Java and C++. When you switch between languages or refresh the page, the UI and the AI chat context instantly restore your previous working state. [Read more about the Web Storage API on MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API).
+- **Dynamic Code Execution**: The backend compiles and runs raw Java and C++ code using system processes in an isolated environment. It parses execution outputs and dynamically maps compile-time errors back to the correct line numbers in your original code. 
 
 ## Technologies and Libraries
 
-- [Monaco Editor](https://microsoft.github.io/monaco-editor/): The core code editor component, which provides the exact same syntax highlighting, minimap, and editing engine as VS Code.
-- [react-resizable-panels](https://github.com/bvaughn/react-resizable-panels): A React component library used to create the customizable, drag-to-resize split-pane layout between the code editor and the test results.
-- [FastAPI](https://fastapi.tiangolo.com/): A modern, high-performance web framework for building the Python backend API that handles the scraping and execution logic.
-- [Lucide React](https://lucide.dev/): A clean, SVG-based icon library utilized throughout the frontend interface.
-- [JetBrains Mono](https://www.jetbrains.com/lp/mono/): The primary monospace font configured within the editor for optimal code legibility.
+- **[@monaco-editor/react](https://github.com/suren-atoyan/monaco-react)**: Integrates the Monaco Editor (the engine that powers VS Code) into React, providing professional syntax highlighting, error squiggles, and autocompletion right in the browser.
+- **[React-Rnd](https://github.com/bokuweb/react-rnd)**: A resizable and draggable component for React used to build the flexible AI chat pane and tools interface.
+- **[FastAPI](https://fastapi.tiangolo.com/)**: A high-performance Python framework used to build the backend API endpoints and manage the asynchronous streaming responses.
+- **[Lucide React](https://lucide.dev/)**: Provides the clean, consistent icons used throughout the user interface.
+- **[Tailwind CSS](https://tailwindcss.com/)**: Handles all application styling with utility classes.
 
 ## Project Structure
 
 ```text
 .
 ├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── App.tsx
-│   │   ├── index.css
-│   │   └── main.tsx
-│   ├── package.json
-│   └── vite.config.ts
+│   ├── public/
+│   └── src/
+│       ├── components/
+│       └── context/
+├── docker-compose.yml
+├── Dockerfile
 ├── executor.py
 ├── main.py
-├── package.json
 └── scraper.py
 ```
 
-### Directory Details
-
-- [`./frontend/`](./frontend/): Contains the entire Vite and React-based user interface.
-- [`./frontend/src/components/`](./frontend/src/components/): Houses reusable UI components, such as the `Timer.tsx` module which handles the countdown logic and audio synthesis.
-- [`./executor.py`](./executor.py): The core execution engine. It dynamically constructs a Java `Main` class wrapper around the user's code to parse `stdin` and print results to `stdout`.
-- [`./scraper.py`](./scraper.py): Handles the data ingestion. It directly queries GraphQL and REST endpoints to extract problem descriptions, boilerplate code, and baseline test cases.
-- [`./main.py`](./main.py): The FastAPI entry point that bridges the frontend client with the scraping and execution modules.
+- [`frontend/src/components/`](./frontend/src/components/): Contains the isolated React components that construct the user interface, such as the AI Chatbox and the layout panels.
+- [`frontend/src/context/`](./frontend/src/context/): Contains React Context providers, such as the AI configuration state that passes language awareness down to the chat.
+- [`executor.py`](./executor.py): Manages the generation of test harnesses and the compilation of Java and C++ code.
+- [`main.py`](./main.py): The FastAPI server entry point that handles API routing and AI prompt building.
+- [`scraper.py`](./scraper.py): Contains the logic for asynchronously fetching problem descriptions, test cases, and boilerplate code from external APIs.
