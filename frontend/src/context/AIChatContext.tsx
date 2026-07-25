@@ -18,7 +18,30 @@ export interface Snippet {
   pinned: boolean;
 }
 
+export interface TestCase {
+  input: string;
+  expectedOutput: string;
+}
+
+export interface Workspace {
+  id: string;
+  name: string;
+  language: 'cpp' | 'java';
+  code: string;
+  url: string;
+  problemDescription: any;
+  testCases: TestCase[];
+}
+
 interface AIChatContextType {
+  // Workspace State
+  workspaces: Workspace[];
+  setWorkspaces: React.Dispatch<React.SetStateAction<Workspace[]>>;
+  activeWorkspaceId: string;
+  setActiveWorkspaceId: React.Dispatch<React.SetStateAction<string>>;
+  updateWorkspace: (id: string, updates: Partial<Workspace>) => void;
+  activeWorkspace: Workspace;
+
   // Master AI Feature State
   isAIEnabled: boolean;
   setIsAIEnabled: React.Dispatch<React.SetStateAction<boolean>>;
@@ -43,14 +66,10 @@ interface AIChatContextType {
   // Visibility
   isChatOpen: boolean;
   setIsChatOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  language: 'java' | 'cpp';
-  setLanguage: React.Dispatch<React.SetStateAction<'java' | 'cpp'>>;
   messages: ChatMessage[];
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
   attachedSnippets: string[];
   setAttachedSnippets: React.Dispatch<React.SetStateAction<string[]>>;
-  problemDescription: any;
-  setProblemDescription: React.Dispatch<React.SetStateAction<any>>;
 
   // Auto Send
   autoSendPrompt: string;
@@ -74,6 +93,31 @@ interface AIChatContextType {
 }
 
 const AIChatContext = createContext<AIChatContextType | undefined>(undefined);
+
+export const DEFAULT_JAVA_CODE = `import java.util.*;
+
+public class Solution {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        // Read your input here
+        // e.g. int n = scanner.nextInt();
+        
+        System.out.println("Hello, OpenRun!");
+    }
+}`;
+
+export const DEFAULT_CPP_CODE = `#include <iostream>
+#include <vector>
+
+using namespace std;
+
+class Solution {
+public:
+    int solve(int n) {
+        // Your code here
+        return n;
+    }
+};`;
 
 export const PROVIDERS: Record<string, { name: string; defaultBaseUrl: string; defaultModel: string; models: string[] }> = {
   openai: { 
@@ -200,14 +244,60 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     return [];
   });
   const [attachedSnippets, setAttachedSnippets] = useState<string[]>([]);
-  const [problemDescription, setProblemDescription] = useState<any>(() => {
-    return localStorage.getItem('openrun_desc') || '';
+  
+  const [workspaces, setWorkspaces] = useState<Workspace[]>(() => {
+    const saved = localStorage.getItem('openrun_workspaces');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    // Fallback to old keys or default
+    return [
+      {
+        id: '1',
+        name: '1',
+        language: (localStorage.getItem('openrun_language') as 'java' | 'cpp') || 'cpp',
+        code: localStorage.getItem('openrun_cpp_code') || DEFAULT_CPP_CODE,
+        url: '',
+        problemDescription: localStorage.getItem('openrun_desc') || '',
+        testCases: JSON.parse(localStorage.getItem('openrun_testcases') || '[{"input":"","expectedOutput":""}]')
+      },
+      {
+        id: '2',
+        name: '2',
+        language: 'java',
+        code: localStorage.getItem('openrun_java_code') || DEFAULT_JAVA_CODE,
+        url: '',
+        problemDescription: '',
+        testCases: [{ input: '', expectedOutput: '' }]
+      },
+      {
+        id: '3',
+        name: '3',
+        language: 'cpp',
+        code: DEFAULT_CPP_CODE,
+        url: '',
+        problemDescription: '',
+        testCases: [{ input: '', expectedOutput: '' }]
+      }
+    ];
   });
+  
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string>(() => {
+    return localStorage.getItem('openrun_active_workspace') || '1';
+  });
+
+  const activeWorkspace = workspaces.find(w => w.id === activeWorkspaceId) || workspaces[0];
+
+  const updateWorkspace = (id: string, updates: Partial<Workspace>) => {
+    setWorkspaces(prev => prev.map(w => w.id === id ? { ...w, ...updates } : w));
+  };
+
   const [clipboardSnippets, setClipboardSnippets] = useState<Snippet[]>([]);
   const [editorRef, setEditorRef] = useState<React.MutableRefObject<any> | null>(null);
-  const [language, setLanguage] = useState<'java' | 'cpp'>(() => {
-    return (localStorage.getItem('openrun_language') as 'java' | 'cpp') || 'java';
-  });
+  
   const [autoSendPrompt, setAutoSendPrompt] = useState('');
   const [uiFontSize, setUiFontSize] = useState<number>(() => {
     return parseInt(localStorage.getItem('openrun_ui_fontsize') || '14');
@@ -239,8 +329,12 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [provider]);
 
   useEffect(() => {
-    localStorage.setItem('openrun_language', language);
-  }, [language]);
+    localStorage.setItem('openrun_workspaces', JSON.stringify(workspaces));
+  }, [workspaces]);
+
+  useEffect(() => {
+    localStorage.setItem('openrun_active_workspace', activeWorkspaceId);
+  }, [activeWorkspaceId]);
 
   useEffect(() => {
     localStorage.setItem('openrun_ai_messages', JSON.stringify(messages));
@@ -251,6 +345,9 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [uiFontSize]);
 
   const value = {
+    workspaces, setWorkspaces,
+    activeWorkspaceId, setActiveWorkspaceId,
+    updateWorkspace, activeWorkspace,
     isAIEnabled, setIsAIEnabled,
     isChatOpen, setIsChatOpen,
     isDocked, setIsDocked,
@@ -261,10 +358,8 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     chatMode, setChatMode,
     messages, setMessages,
     attachedSnippets, setAttachedSnippets,
-    problemDescription, setProblemDescription,
     clipboardSnippets, setClipboardSnippets,
     editorRef, setEditorRef,
-    language, setLanguage,
     autoSendPrompt, setAutoSendPrompt,
     isGenerating, setIsGenerating,
     uiFontSize, setUiFontSize

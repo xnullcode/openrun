@@ -6,12 +6,7 @@ import axios from 'axios';
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import Timer from './components/Timer';
 import AIChat, { DockedAIChat } from './components/AIChat';
-import { useAIChat } from './context/AIChatContext';
-
-interface TestCase {
-  input: string;
-  expectedOutput: string;
-}
+import { useAIChat, DEFAULT_CPP_CODE, type TestCase } from './context/AIChatContext';
 
 interface TestResult {
   testCaseIndex: number;
@@ -23,44 +18,26 @@ interface TestResult {
   memoryUsed: string;
 }
 
-const DEFAULT_JAVA_CODE = `import java.util.*;
-
-public class Solution {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        // Read your input here
-        // e.g. int n = scanner.nextInt();
-        
-        System.out.println("Hello, OpenRun!");
-    }
-}`;
-
-const DEFAULT_CPP_CODE = `#include <iostream>
-#include <vector>
-
-using namespace std;
-
-class Solution {
-public:
-    int solve(int n) {
-        // Your code here
-        return n;
-    }
-};`;
-
 function App() {
-  const { isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, problemDescription, setProblemDescription, setMessages: setAIMessages, language, setLanguage, setAutoSendPrompt, isGenerating, uiFontSize, setUiFontSize } = useAIChat();
-
-  const [javaCode, setJavaCode] = useState(() => localStorage.getItem('openrun_java_code') || DEFAULT_JAVA_CODE);
-  const [cppCode, setCppCode] = useState(() => localStorage.getItem('openrun_cpp_code') || DEFAULT_CPP_CODE);
+  const { 
+    workspaces, setWorkspaces, activeWorkspaceId, setActiveWorkspaceId, updateWorkspace, activeWorkspace,
+    isDocked, setEditorRef, setIsChatOpen, isAIEnabled, setIsAIEnabled, setAttachedSnippets, 
+    setAutoSendPrompt, isGenerating, uiFontSize, setUiFontSize 
+  } = useAIChat();
+  const code = activeWorkspace.code;
+  const setCode = (val: string) => updateWorkspace(activeWorkspaceId, { code: val });
   
-  const code = language === 'java' ? javaCode : cppCode;
-  const setCode = (val: string) => language === 'java' ? setJavaCode(val) : setCppCode(val);
+  const testCases = activeWorkspace.testCases;
+  const setTestCases = (val: TestCase[]) => updateWorkspace(activeWorkspaceId, { testCases: val });
+  
+  const language = activeWorkspace.language;
+  const setLanguage = (val: 'java' | 'cpp') => updateWorkspace(activeWorkspaceId, { language: val });
+  
+  const scrapeUrl = activeWorkspace.url;
+  const setScrapeUrl = (val: string) => updateWorkspace(activeWorkspaceId, { url: val });
+  
+  const problemDescription = activeWorkspace.problemDescription;
 
-  const [testCases, setTestCases] = useState<TestCase[]>(() => {
-    const saved = localStorage.getItem('openrun_testcases');
-    return saved ? JSON.parse(saved) : [{ input: '', expectedOutput: '' }];
-  });
   const [results, setResults] = useState<TestResult[]>([]);
   const [activeTab, setActiveTab] = useState<'description' | 'tests' | 'results' | 'ai'>('description');
   const [activeCaseIndex, setActiveCaseIndex] = useState(0);
@@ -184,7 +161,7 @@ function App() {
       setActiveTab('description');
     }
   }, [isDocked, isAIEnabled]);
-  const [scrapeUrl, setScrapeUrl] = useState('');
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isScraping, setIsScraping] = useState(false);
   
@@ -225,40 +202,10 @@ function App() {
 
   const handleReset = () => {
     if (window.confirm("Are you sure you want to reset all code, test cases, and settings? This cannot be undone.")) {
-      localStorage.removeItem('openrun_java_code');
-      localStorage.removeItem('openrun_cpp_code');
-      localStorage.removeItem('openrun_testcases');
-      setJavaCode(DEFAULT_JAVA_CODE);
-      setCppCode(DEFAULT_CPP_CODE);
-      setTestCases([{ input: '', expectedOutput: '' }]);
-      setResults([]);
-      setActiveTab('tests');
-      setActiveCaseIndex(0);
-      setScrapeUrl('');
-      setProblemDescription('');
-      localStorage.removeItem('openrun_desc');
-      setLayoutOrientation("horizontal");
-      setAIMessages([]);
+      localStorage.removeItem('openrun_workspaces');
+      window.location.reload();
     }
   };
-
-  useEffect(() => {
-    localStorage.setItem('openrun_java_code', javaCode);
-  }, [javaCode]);
-
-  useEffect(() => {
-    localStorage.setItem('openrun_cpp_code', cppCode);
-  }, [cppCode]);
-
-  useEffect(() => {
-    localStorage.setItem('openrun_testcases', JSON.stringify(testCases));
-  }, [testCases]);
-
-
-
-  useEffect(() => {
-    localStorage.setItem('openrun_desc', problemDescription);
-  }, [problemDescription]);
 
   const handleRun = async () => {
     setIsLoading(true);
@@ -291,16 +238,22 @@ function App() {
     try {
       const res = await axios.post('/api/scrape', { url: scrapeUrl });
       if (res.data.success && res.data.test_cases && res.data.test_cases.length > 0) {
-        setTestCases(res.data.test_cases);
-        if (res.data.starting_code_java) {
-          setJavaCode(res.data.starting_code_java);
+        
+        const updates: Partial<any> = {
+          testCases: res.data.test_cases
+        };
+
+        if (language === 'java' && res.data.starting_code_java) {
+          updates.code = res.data.starting_code_java;
         }
-        if (res.data.starting_code_cpp) {
-          setCppCode(res.data.starting_code_cpp);
+        if (language === 'cpp' && res.data.starting_code_cpp) {
+          updates.code = res.data.starting_code_cpp;
         }
         if (res.data.description_html) {
-          setProblemDescription(res.data.description_html);
+          updates.problemDescription = res.data.description_html;
         }
+
+        updateWorkspace(activeWorkspaceId, updates);
         setActiveCaseIndex(0);
         setActiveTab('description');
       } else {
@@ -361,7 +314,9 @@ function App() {
 
   const editorPanelContent = (
     <div className="w-full h-full flex flex-col bg-background">
-      <div className="h-10 bg-surface border-b border-border flex items-center justify-between px-4 text-sm font-medium text-textMuted shrink-0">
+      <div className="h-12 bg-surface border-b border-border flex items-center justify-between px-4 text-sm font-medium text-textMuted shrink-0">
+        
+        {/* Left: Language Selector */}
         <div className="flex items-center gap-1 bg-secondary p-1 rounded-md border border-border">
           <button 
             onClick={() => setLanguage('java')}
@@ -376,6 +331,56 @@ function App() {
             C++
           </button>
         </div>
+
+        {/* Center: Workspace Tabs (Material You Style) */}
+        <div className="hidden sm:flex items-center gap-1.5 p-1 bg-black/10 dark:bg-white/5 rounded-full px-2 mx-2">
+          {workspaces.map((w) => (
+            <button
+              key={w.id}
+              onClick={() => setActiveWorkspaceId(w.id)}
+              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200 ${w.id === activeWorkspaceId ? 'bg-primary text-white shadow-md' : 'text-textMuted hover:bg-black/5 dark:hover:bg-white/10 hover:text-textMain'}`}
+            >
+              {w.name}
+            </button>
+          ))}
+          <button
+            onClick={() => {
+              const newId = Date.now().toString();
+              const newName = (workspaces.length + 1).toString();
+              setWorkspaces([...workspaces, {
+                id: newId,
+                name: newName,
+                language: 'cpp',
+                code: DEFAULT_CPP_CODE,
+                url: '',
+                problemDescription: '',
+                testCases: [{ input: '', expectedOutput: '' }]
+              }]);
+              setActiveWorkspaceId(newId);
+            }}
+            className="w-7 h-7 rounded-full flex items-center justify-center text-textMuted hover:bg-black/5 dark:hover:bg-white/10 hover:text-textMain transition-all ml-0.5"
+            title="New Workspace"
+          >
+            <Plus size={16} />
+          </button>
+          
+          {workspaces.length > 2 && (
+            <button
+              onClick={() => {
+                const newWorkspaces = workspaces.filter(w => w.id !== activeWorkspaceId);
+                const renumbered = newWorkspaces.map((w, i) => ({ ...w, name: (i + 1).toString() }));
+                setWorkspaces(renumbered);
+                setActiveWorkspaceId(renumbered[0].id);
+              }}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-red-400 hover:bg-red-400/10 hover:text-red-500 transition-all ml-0.5"
+              title="Delete Current Workspace"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+        </div>
+
+        {/* Right: Font Size */}
         <div className="flex items-center gap-1.5 bg-secondary px-2 py-1 rounded-md">
           <button onClick={() => setFontSize(f => Math.max(10, f - 1))} className="hover:text-textMain transition-colors" title="Decrease Font Size">
             <Minus size={14} />

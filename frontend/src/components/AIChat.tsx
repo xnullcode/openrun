@@ -293,7 +293,7 @@ function ChatInnerContent({
     chatMode, setChatMode,
     attachedSnippets, setAttachedSnippets,
     messages, setMessages,
-    problemDescription, editorRef, language,
+    editorRef, activeWorkspace,
     autoSendPrompt, setAutoSendPrompt, isDocked,
     isGenerating, setIsGenerating,
     uiFontSize
@@ -345,7 +345,7 @@ function ChatInnerContent({
     let newAttachments: string[] | undefined;
 
     if (attachedSnippets.length > 0) {
-      hiddenContext = "\n\nAttached Code:\n" + attachedSnippets.map(s => "```" + language + "\n" + s + "\n```").join("\n");
+      hiddenContext = "\n\nAttached Code:\n" + attachedSnippets.map(s => "```" + activeWorkspace.language + "\n" + s + "\n```").join("\n");
       newAttachments = [...attachedSnippets];
       setAttachedSnippets([]);
     }
@@ -375,10 +375,10 @@ function ChatInnerContent({
             role: m.role,
             content: m.hiddenContext ? `${m.content}${m.hiddenContext}` : m.content
           })),
-          problemDescription,
+          problemDescription: activeWorkspace.problemDescription,
           editorCode: editorRef?.current?.getValue(),
           chatMode,
-          language
+          language: activeWorkspace.language
         })
       });
       
