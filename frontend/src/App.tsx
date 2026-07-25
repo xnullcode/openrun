@@ -175,7 +175,18 @@ function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem('openrun_theme') as 'light' | 'dark') || 'dark');
   const [fontSize, setFontSize] = useState(() => parseInt(localStorage.getItem('openrun_fontsize') || '14'));
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
   const [showToolsPane, setShowToolsPane] = useState(() => localStorage.getItem('openrun_show_tools') !== 'false');
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+        setIsSettingsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('openrun_show_tools', showToolsPane.toString());
@@ -494,14 +505,14 @@ function App() {
             <RotateCcw size={16} />
           </button>
 
-          <div className="relative flex items-center h-9">
+          <div className="relative flex items-center h-9" ref={settingsRef}>
             <button onClick={() => setIsSettingsOpen(!isSettingsOpen)} className={`p-1.5 rounded-lg transition-colors h-9 w-9 flex items-center justify-center ${isSettingsOpen ? 'bg-secondary text-textMain' : 'text-textMuted hover:text-textMain hover:bg-secondary'}`} title="Settings">
               <Settings size={16} />
             </button>
             {/* Settings Dropdown (Material You Style) */}
             {isSettingsOpen && (
               <>
-                <div className="fixed inset-0 z-[60]" onClick={() => setIsSettingsOpen(false)}></div>
+                <div className="fixed inset-0 z-[60] sm:hidden" onClick={() => setIsSettingsOpen(false)}></div>
                 <div className="fixed sm:absolute top-[70px] sm:top-full left-1/2 sm:left-auto right-auto sm:right-0 -translate-x-1/2 sm:translate-x-0 sm:mt-2 w-[95vw] sm:w-[320px] max-w-[350px] bg-[#1c1d21] rounded-[24px] p-4 shadow-2xl z-[70] border border-white/5">
                   <div className="grid grid-cols-2 gap-3">
                     {/* Theme Toggle */}
