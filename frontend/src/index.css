@@ -48,3 +48,24 @@
 .problem-description strong { @apply text-textMain font-semibold; }
 .problem-description h1, .problem-description h2, .problem-description h3 { @apply text-textMain font-bold mt-6 mb-3; }
 .problem-description img { @apply max-w-full rounded-lg my-4; }
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.thinking-glow {
+  background: linear-gradient(90deg, #6b7280 30%, #111827 50%, #6b7280 70%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer 2.5s linear infinite;
+}
+.dark .thinking-glow {
+  background: linear-gradient(90deg, #9ca3af 30%, #f9fafb 50%, #9ca3af 70%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer 2.5s linear infinite;
+}

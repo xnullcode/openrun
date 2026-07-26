@@ -392,9 +392,31 @@ function ChatInnerContent({
                 
                 try {
                   const data = JSON.parse(dataStr);
-                  if (data.error) throw new Error(data.error);
+                  if (data.error) throw new Error(data.error.message || data.error);
                   
-                  const content = data.choices?.[0]?.delta?.content;
+                  let content = data.choices?.[0]?.delta?.content || "";
+                  
+                  // Fix for buggy API proxies (like some local runners) that dump raw SSE JSON into content
+                  // This happens when proxies do a broken string replace on "index" and turn it into "content":"x"
+                  if (typeof content === 'string' && content.includes('"delta":{"reasoning"')) {
+                    const match = content.match(/"reasoning":\s*"([^"\\]*(?:\\.[^"\\]*)*)"/);
+                    if (match) {
+                        try {
+                            content = JSON.parse('"' + match[1] + '"'); // properly unescape
+                        } catch (e) {
+                            content = match[1];
+                        }
+                    } else {
+                        content = ""; // hide garbage if unparseable
+                    }
+                  }
+                  
+                  // Handle APIs that properly stream reasoning fields natively
+                  const reasoning = data.choices?.[0]?.delta?.reasoning || data.choices?.[0]?.delta?.reasoning_content;
+                  if (reasoning && typeof reasoning === 'string') {
+                      content = reasoning + content;
+                  }
+
                   if (content) {
                     await new Promise(resolve => setTimeout(resolve, 2));
                     setMessages(prev => {
@@ -422,8 +444,24 @@ function ChatInnerContent({
             if (dataStr !== '[DONE]' && dataStr) {
               try {
                 const data = JSON.parse(dataStr);
-                if (data.error) throw new Error(data.error);
-                const content = data.choices?.[0]?.delta?.content;
+                if (data.error) throw new Error(data.error.message || data.error);
+                let content = data.choices?.[0]?.delta?.content || "";
+                
+                if (typeof content === 'string' && content.includes('"delta":{"reasoning"')) {
+                  const match = content.match(/"reasoning":\s*"([^"\\]*(?:\\.[^"\\]*)*)"/);
+                  if (match) {
+                      try { content = JSON.parse('"' + match[1] + '"'); } 
+                      catch (e) { content = match[1]; }
+                  } else {
+                      content = "";
+                  }
+                }
+                
+                const reasoning = data.choices?.[0]?.delta?.reasoning || data.choices?.[0]?.delta?.reasoning_content;
+                if (reasoning && typeof reasoning === 'string') {
+                    content = reasoning + content;
+                }
+
                 if (content) {
                   setMessages(prev => {
                     const newMsgs = [...prev];
