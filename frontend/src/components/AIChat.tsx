@@ -414,7 +414,7 @@ function ChatInnerContent({
                   // Handle APIs that properly stream reasoning fields natively
                   const reasoning = data.choices?.[0]?.delta?.reasoning || data.choices?.[0]?.delta?.reasoning_content;
                   if (reasoning && typeof reasoning === 'string') {
-                      content = reasoning + content;
+                    content = ""; // Just discard reasoning completely
                   }
 
                   if (content) {
@@ -459,7 +459,7 @@ function ChatInnerContent({
                 
                 const reasoning = data.choices?.[0]?.delta?.reasoning || data.choices?.[0]?.delta?.reasoning_content;
                 if (reasoning && typeof reasoning === 'string') {
-                    content = reasoning + content;
+                  content = ""; // Discard reasoning
                 }
 
                 if (content) {
