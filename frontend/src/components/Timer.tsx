@@ -197,7 +197,7 @@ export default function Timer() {
       )}
 
       {showPopover && (
-        <div className="fixed sm:absolute top-[70px] sm:top-12 left-1/2 sm:left-auto right-auto sm:right-0 -translate-x-1/2 sm:translate-x-0 bg-surface border border-border rounded-xl shadow-xl p-3 z-[70] animate-in fade-in zoom-in-95 duration-100 w-[95vw] max-w-[350px] sm:w-auto sm:min-w-[280px]">
+        <div className="fixed sm:absolute top-[70px] sm:top-12 left-1/2 sm:left-auto right-auto sm:right-0 -translate-x-1/2 sm:translate-x-0 bg-surface border border-border rounded-xl shadow-xl p-3 z-[110] animate-in fade-in zoom-in-95 duration-100 w-[95vw] max-w-[350px] sm:w-auto sm:min-w-[280px]">
           <div className="flex gap-2 mb-3 h-[120px]">
             {mode === 'stopwatch' ? (
               <>

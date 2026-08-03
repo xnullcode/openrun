@@ -822,7 +822,7 @@ export default function AIChat() {
         position={fabPosition}
         enableResizing={false}
         bounds="window"
-        className="z-50"
+        className="z-[100]"
         onDragStart={(_e, d) => { dragStartPos.current = { x: d.x, y: d.y }; }}
         onDragStop={(_e, d) => { 
           setFabPosition({ x: d.x, y: d.y });
@@ -862,7 +862,7 @@ export default function AIChat() {
       bounds="window"
       dragHandleClassName="drag-handle"
       cancel=".cancel-drag"
-      className="z-50 bg-surface border border-border rounded-[24px] shadow-2xl overflow-hidden"
+      className="z-[100] bg-surface border border-border rounded-[24px] shadow-2xl overflow-hidden"
       style={{ transition: 'none' }}
     >
       <div className="flex flex-col absolute inset-0">

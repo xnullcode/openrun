@@ -40,6 +40,10 @@
   }
 }
 
+.problem-description, .problem-description * {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
 .problem-description p { @apply mb-4 leading-relaxed; }
 .problem-description ul, .problem-description ol { @apply list-disc list-outside mb-4 ml-5; }
 .problem-description pre { @apply bg-secondary p-4 rounded-xl border border-border overflow-x-auto mb-4 font-mono text-[13px] text-textMain shadow-inner; }

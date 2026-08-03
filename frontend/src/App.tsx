@@ -1,12 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import DOMPurify from 'dompurify';
 import Editor from '@monaco-editor/react';
 import { Play, Download, Plus, Minus, Trash2, CheckCircle, XCircle, Cpu, Columns, Rows, RotateCcw, Sun, Moon, Settings, BookOpen, Sparkles, Type } from 'lucide-react';
 import axios from 'axios';
 import { Group, Panel, Separator } from 'react-resizable-panels';
+import React from 'react';
 import Timer from './components/Timer';
 import AIChat, { DockedAIChat } from './components/AIChat';
 import { useAIChat, DEFAULT_CPP_CODE, DEFAULT_JAVA_CODE, type TestCase, type TestResult } from './context/AIChatContext';
+
+const MemoizedDescription = React.memo(({ html }: { html: string }) => (
+  <div dangerouslySetInnerHTML={{ __html: html }} />
+));
 
 function App() {
   const { 
@@ -34,6 +39,10 @@ function App() {
   const setScrapeUrl = (val: string) => updateWorkspace(activeWorkspaceId, { url: val });
   
   const problemDescription = activeWorkspace.problemDescription;
+
+  const sanitizedProblemDescription = useMemo(() => {
+    return problemDescription ? DOMPurify.sanitize(problemDescription) : '';
+  }, [problemDescription]);
   const results = activeWorkspace.results || [];
   const setResults = (val: TestResult[]) => updateWorkspace(activeWorkspaceId, { results: val });
 
@@ -115,20 +124,27 @@ function App() {
       }
     };
 
+    let selectionTimeout: number | null = null;
+    const debouncedHandleDOMSelection = () => {
+      if (selectionTimeout) window.clearTimeout(selectionTimeout);
+      selectionTimeout = window.setTimeout(handleDOMSelection, 100);
+    };
+
     const handleMouseUp = () => {
-      setTimeout(handleDOMSelection, 20);
+      debouncedHandleDOMSelection();
     };
 
     document.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('touchend', handleMouseUp);
-    document.addEventListener('selectionchange', handleDOMSelection);
-    window.addEventListener('scroll', handleDOMSelection, true);
+    document.addEventListener('selectionchange', debouncedHandleDOMSelection);
+    window.addEventListener('scroll', debouncedHandleDOMSelection, true);
 
     return () => {
+      if (selectionTimeout) window.clearTimeout(selectionTimeout);
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('touchend', handleMouseUp);
-      document.removeEventListener('selectionchange', handleDOMSelection);
-      window.removeEventListener('scroll', handleDOMSelection, true);
+      document.removeEventListener('selectionchange', debouncedHandleDOMSelection);
+      window.removeEventListener('scroll', debouncedHandleDOMSelection, true);
     };
   }, []);
 
@@ -457,7 +473,7 @@ function App() {
   return (
     <div className="h-[100dvh] w-full flex flex-col bg-background text-textMain overflow-hidden font-sans">
       {/* Header */}
-      <header className="py-2 min-h-[56px] border-b border-border bg-surface px-2 md:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3 shadow-md z-[60] shrink-0">
+      <header className="py-2 min-h-[56px] border-b border-border bg-surface px-2 md:px-6 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3 shadow-md shrink-0 relative">
         
         {/* Left side: Logo */}
         <div className="flex items-center gap-2 md:gap-3 shrink-0">
@@ -512,8 +528,8 @@ function App() {
             {/* Settings Dropdown (Material You Style) */}
             {isSettingsOpen && (
               <>
-                <div className="fixed inset-0 z-[60] sm:hidden" onClick={() => setIsSettingsOpen(false)}></div>
-                <div className="fixed sm:absolute top-[70px] sm:top-full left-1/2 sm:left-auto right-auto sm:right-0 -translate-x-1/2 sm:translate-x-0 sm:mt-2 w-[95vw] sm:w-[320px] max-w-[350px] bg-[#1c1d21] rounded-[24px] p-4 shadow-2xl z-[70] border border-white/5">
+                <div className="fixed inset-0 z-[105] sm:hidden" onClick={() => setIsSettingsOpen(false)}></div>
+                <div className="fixed sm:absolute top-[70px] sm:top-full left-1/2 sm:left-auto right-auto sm:right-0 -translate-x-1/2 sm:translate-x-0 sm:mt-2 w-[95vw] sm:w-[320px] max-w-[350px] bg-[#1c1d21] rounded-[24px] p-4 shadow-2xl z-[110] border border-white/5">
                   <div className="grid grid-cols-2 gap-3">
                     {/* Theme Toggle */}
                     <button 
@@ -672,7 +688,7 @@ function App() {
               {activeTab === 'description' && (
                 <div className="flex-1 p-4 overflow-y-auto custom-scrollbar problem-description text-sm text-textMain" style={{ fontSize: `${uiFontSize}px` }}>
                   {problemDescription ? (
-                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(problemDescription) }} />
+                    <MemoizedDescription html={sanitizedProblemDescription} />
                   ) : (
                     <div className="flex h-full items-center justify-center text-textMuted">
                       <p>Scrape a problem to see its description here.</p>
@@ -823,7 +839,7 @@ function App() {
       {/* Ask AI Popup */}
       {selectionPopup && (
         <div 
-          className="fixed z-[100] transform -translate-x-1/2 -translate-y-full"
+          className="fixed z-[200] transform -translate-x-1/2 -translate-y-full"
           style={{ left: Math.max(80, Math.min(window.innerWidth - 80, selectionPopup.x)), top: selectionPopup.y - 10 }}
         >
           <button
